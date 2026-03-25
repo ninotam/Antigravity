@@ -99,11 +99,59 @@
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 14px;
-      padding: 12px 14px;
+      padding: 10px 12px;
       color: #344453;
       margin-bottom: 16px;
       display: none;
       font-size: 0.93rem;
+    }
+
+    .phase-bars {
+      display: grid;
+      gap: 8px;
+    }
+
+    .phase-row {
+      display: grid;
+      grid-template-columns: 26px 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .phase-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid #b8c6d3;
+      background: #e8edf2;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .phase-dot img {
+      width: 16px;
+      height: 16px;
+      opacity: 0.9;
+    }
+
+    .phase-bar {
+      position: relative;
+      height: 10px;
+      border-radius: 999px;
+      background: #dfe6ec;
+      overflow: hidden;
+      border: 1px solid #c9d3dc;
+    }
+
+    .phase-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background: linear-gradient(90deg, #1d7b72 0%, #48b093 100%);
+      transition: width 280ms ease;
     }
 
     .tree {
@@ -143,20 +191,21 @@
     }
 
     .node.history-node {
-      opacity: 0.74;
-      transform: scale(0.965);
-      padding: 10px 11px;
+      opacity: 0.46;
+      max-width: 56%;
+      padding: 7px 8px;
+      margin-left: 8px;
     }
 
     .node.history-node h3 {
-      font-size: 0.92rem;
-      color: #465765;
+      font-size: 0.6rem;
+      color: #5f6f7e;
       font-weight: 700;
     }
 
     .node.history-node .done-summary {
-      font-size: 0.78rem;
-      color: #627382;
+      font-size: 0.58rem;
+      color: #718291;
     }
 
     .node-head {
@@ -213,10 +262,18 @@
 
     .done-summary {
       margin-top: 8px;
-      font-size: 0.88rem;
+      font-size: 0.8rem;
       color: #485b6c;
       border-top: 1px dashed #ccd4dc;
       padding-top: 8px;
+    }
+
+    .history-icon {
+      width: 16px;
+      height: 16px;
+      display: inline-block;
+      margin-left: auto;
+      opacity: 0.9;
     }
 
     .reassure {
@@ -403,9 +460,34 @@
       display: none;
     }
 
+    .celebrate {
+      margin-top: 10px;
+      position: relative;
+      height: 42px;
+      overflow: hidden;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #effaf4 0%, #dff3e9 100%);
+      border: 1px solid #b6dcc8;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 8px;
+      height: 14px;
+      border-radius: 2px;
+      opacity: 0;
+      animation: burst 900ms ease forwards;
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(5px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes burst {
+      0% { transform: translateY(-18px) rotate(0deg); opacity: 0; }
+      20% { opacity: 1; }
+      100% { transform: translateY(48px) rotate(180deg); opacity: 0; }
     }
 
 
@@ -445,8 +527,8 @@
         title: "使っているOSを選んでください",
         description: "ここで選ぶと、そのOS向けの手順だけ表示します。",
         choices: [
-          { label: "Windowsで進める", next: "win_open_terminal", summary: "Windowsルートを選択" },
-          { label: "Macで進める", next: "mac_open_terminal", summary: "Macルートを選択" }
+          { label: "Windowsで進める", next: "win_open_terminal", summary: "Windowsルートを選択", flow: "win" },
+          { label: "Macで進める", next: "mac_open_terminal", summary: "Macルートを選択", flow: "mac" }
         ]
       },
 
@@ -466,6 +548,14 @@
         command: "$apps = @()\n$apps += Get-ItemProperty HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* -ErrorAction SilentlyContinue\n$apps += Get-ItemProperty HKLM:\\Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* -ErrorAction SilentlyContinue\n$apps += Get-ItemProperty HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* -ErrorAction SilentlyContinue\n$apps | Where-Object { $_.DisplayName -match 'Antigravity' } | Select-Object -First 1 DisplayName, DisplayVersion",
         reassurance: "貼り付け時に警告が出る場合がありますが、この手順では想定内です。続行して問題ありません。",
         expectedOutput: "DisplayName        DisplayVersion\n-----------        --------------\nAntigravity (User) 1.20.6",
+        preSteps: [
+          "下の確認コマンドを実行して、結果が出るか確認します。",
+          "コマンドをコピーして PowerShell に貼り付ける"
+        ],
+        postSteps: [
+          "Enter を押す",
+          "DisplayName / DisplayVersion が表示されることを確認する"
+        ],
         substeps: [
           "下の確認コマンドを実行して、結果が出るか確認します。",
           "コマンドをコピーして PowerShell に貼り付ける",
@@ -473,9 +563,17 @@
           "DisplayName / DisplayVersion が表示されることを確認する"
         ],
         choices: [
-          { label: "インストール済み", next: "win_check_git", summary: "Antigravity は導入済み" },
+          { label: "インストール済み", next: "win_phase1_complete", summary: "Antigravity は導入済み" },
           { label: "未インストール", next: "win_install_antigravity", summary: "Antigravity をこれから導入" },
           { label: "結果が出ない", next: "win_install_antigravity", summary: "Antigravity の確認と導入へ" }
+        ]
+      },
+      win_phase1_complete: {
+        title: "Windows: Antigravity セットアップ完了",
+        description: "ここまでで第1フェーズは達成です。",
+        celebrate: true,
+        choices: [
+          { label: "次の工程（Claude Code準備）へ進む", next: "win_check_git", summary: "第2フェーズへ進行" }
         ]
       },
       win_install_antigravity: {
@@ -488,8 +586,21 @@
       },
       win_check_git: {
         title: "Windows: Git の確認をする",
-        description: "PowerShell でバージョン確認します。",
+        description: "Gitのバージョン確認です。",
         command: "git --version",
+        preSteps: [
+          "下のコマンドをコピーして PowerShell に貼り付ける"
+        ],
+        postSteps: [
+          "Enter を押す",
+          "git version 2.x のような表示が出れば OK"
+        ],
+        substeps: [
+          "下のコマンドをコピーして PowerShell に貼り付ける",
+          "Enter を押す",
+          "git version 2.x のような表示が出れば OK"
+        ],
+        expectedOutput: "git version 2.47.1.windows.1",
         choices: [
           { label: "表示された", next: "win_prepare_path", summary: "Git は利用可能" },
           { label: "表示されなかった", next: "win_install_git", summary: "Git の導入が必要" },
@@ -507,8 +618,21 @@
       },
       win_prepare_path: {
         title: "Windows: PATH 用フォルダを準備する",
-        description: "次をそのまま実行します。既に済んでいればスキップ可能です。",
+        description: "PATH準備スクリプトを実行します。",
         command: "mkdir $env:USERPROFILE\\.local\\bin -Force\n\n$currentPath = [Environment]::GetEnvironmentVariable('PATH', 'User')\nif ($currentPath -notlike \"*$env:USERPROFILE\\.local\\bin*\") {\n  [Environment]::SetEnvironmentVariable(\n    'PATH',\n    \"$currentPath;$env:USERPROFILE\\.local\\bin\",\n    'User'\n  )\n}",
+        preSteps: [
+          "下のコマンドをコピーして PowerShell に貼り付ける"
+        ],
+        postSteps: [
+          "Enter を押す",
+          "$env:PATH -split ';' で .local\\bin が含まれるか確認する"
+        ],
+        substeps: [
+          "下のコマンドをコピーして PowerShell に貼り付ける",
+          "Enter を押す",
+          "$env:PATH -split ';' で .local\\bin が含まれるか確認する"
+        ],
+        expectedOutput: "...\nC:\\Users\\<あなたのユーザー名>\\.local\\bin\n...",
         choices: [
           { label: "実行した", next: "win_restart_shell", summary: "PATH 設定を実行" },
           { label: "すでに設定済み", next: "win_restart_shell", summary: "PATH 設定をスキップ" }
@@ -517,18 +641,67 @@
       win_restart_shell: {
         title: "Windows: PowerShell を開き直す",
         description: "PATH 反映のため、PowerShell を完全に閉じて開き直します。",
+        command: "Win + R を押す\npowershell\nEnter",
+        shellLabel: "開き直し手順",
+        preSteps: [
+          "今の PowerShell を閉じる"
+        ],
+        postSteps: [
+          "Win + R で powershell と入力して Enter",
+          "新しい PowerShell が開いたら次へ進む"
+        ],
+        substeps: [
+          "今の PowerShell を閉じる",
+          "Win + R で powershell と入力して Enter",
+          "新しい PowerShell が開いたら次へ進む"
+        ],
         choices: [
           { label: "開き直した", next: "win_check_node", summary: "PowerShell を再起動" }
         ]
       },
       win_check_node: {
         title: "Windows: Node.js の確認をする",
-        description: "v18 以上が表示されるか確認します。",
-        command: "node --version\nnpm --version",
+        description: "まず Node 本体の確認です。",
+        command: "node --version",
+        preSteps: [
+          "下のコマンドをコピーして PowerShell に貼り付ける"
+        ],
+        postSteps: [
+          "Enter を押す",
+          "v18 以上が表示されることを確認する"
+        ],
+        substeps: [
+          "下のコマンドをコピーして PowerShell に貼り付ける",
+          "Enter を押す",
+          "v18 以上が表示されることを確認する"
+        ],
+        expectedOutput: "v24.13.1",
         choices: [
-          { label: "v18以上が表示された", next: "win_install_claude", summary: "Node.js は利用可能" },
+          { label: "v18以上が表示された", next: "win_check_npm", summary: "Node.js は利用可能" },
           { label: "表示されなかった", next: "win_install_node", summary: "Node.js の導入が必要" },
           { label: "わからないので導入へ", next: "win_install_node", summary: "Node.js 導入手順へ進む" }
+        ]
+      },
+      win_check_npm: {
+        title: "Windows: npm の確認をする",
+        description: "次に npm を確認します。",
+        command: "npm --version",
+        preSteps: [
+          "下のコマンドをコピーして PowerShell に貼り付ける"
+        ],
+        postSteps: [
+          "Enter を押す",
+          "数字のバージョンが表示されることを確認する"
+        ],
+        substeps: [
+          "下のコマンドをコピーして PowerShell に貼り付ける",
+          "Enter を押す",
+          "数字のバージョンが表示されることを確認する"
+        ],
+        expectedOutput: "10.9.2",
+        choices: [
+          { label: "表示された", next: "win_check_claude", summary: "npm は利用可能" },
+          { label: "表示されなかった", next: "win_install_node", summary: "Node.js 再導入が必要" }
         ]
       },
       win_install_node: {
@@ -537,7 +710,30 @@
         command: "winget install -e --id OpenJS.NodeJS",
         choices: [
           { label: "インストールできた", next: "win_check_node", summary: "Node.js のインストール完了" },
-          { label: "既に入っていたので次へ", next: "win_install_claude", summary: "Node.js は既存のためスキップ" }
+          { label: "既に入っていたので次へ", next: "win_check_npm", summary: "Node.js は既存のためスキップ" }
+        ]
+      },
+      win_check_claude: {
+        title: "Windows: Claude Code の存在確認",
+        description: "先にインストール済みか確認します。",
+        command: "claude --version",
+        preSteps: [
+          "下のコマンドをコピーして PowerShell に貼り付ける"
+        ],
+        postSteps: [
+          "Enter を押す",
+          "バージョンが表示されたらインストール済み"
+        ],
+        substeps: [
+          "下のコマンドをコピーして PowerShell に貼り付ける",
+          "Enter を押す",
+          "バージョンが表示されたらインストール済み"
+        ],
+        expectedOutput: "1.0.0 などのバージョン表示",
+        choices: [
+          { label: "表示された", next: "win_make_workdir", summary: "Claude Code は導入済み" },
+          { label: "Git Bash エラーが出た", next: "win_set_gitbash_path", summary: "Git Bash パス設定へ進む" },
+          { label: "表示されなかった", next: "win_install_claude", summary: "Claude Code の導入へ進む" }
         ]
       },
       win_install_claude: {
@@ -545,18 +741,8 @@
         description: "公式インストーラを実行します。",
         command: "irm https://claude.ai/install.ps1 | iex",
         choices: [
-          { label: "実行した", next: "win_verify_claude", summary: "Claude Code インストーラを実行" },
-          { label: "既に入っているので次へ", next: "win_verify_claude", summary: "Claude Code 導入をスキップ" }
-        ]
-      },
-      win_verify_claude: {
-        title: "Windows: claude --version を確認する",
-        description: "PowerShell を開き直してから実行します。",
-        command: "claude --version",
-        choices: [
-          { label: "バージョンが表示された", next: "win_launch_claude", summary: "Claude Code の起動準備完了" },
-          { label: "Git Bash エラーが出た", next: "win_set_gitbash_path", summary: "Git Bash パス設定へ進む" },
-          { label: "まだ表示されない", next: "win_install_claude", summary: "Claude Code の再導入へ戻る" }
+          { label: "実行した", next: "win_check_claude", summary: "Claude Code インストーラを実行" },
+          { label: "既に入っているので次へ", next: "win_check_claude", summary: "Claude Code 導入をスキップ" }
         ]
       },
       win_set_gitbash_path: {
@@ -564,8 +750,28 @@
         description: "次を実行後、もう一度バージョン確認します。",
         command: "$env:CLAUDE_CODE_GIT_BASH_PATH=\"C:\\Program Files\\Git\\bin\\bash.exe\"\nclaude --version",
         choices: [
-          { label: "うまくいった", next: "win_launch_claude", summary: "Git Bash パス設定を反映" },
+          { label: "うまくいった", next: "win_make_workdir", summary: "Git Bash パス設定を反映" },
           { label: "まだだめ", next: "win_check_git", summary: "Git 確認に戻る" }
+        ]
+      },
+      win_make_workdir: {
+        title: "Windows: 作業フォルダを作る",
+        description: "まず作業フォルダを作成します。",
+        command: "mkdir C:\\work\\my-project -Force",
+        preSteps: [
+          "下のコマンドをコピーして PowerShell に貼り付ける"
+        ],
+        postSteps: [
+          "Enter を押す",
+          "エラーなく実行できたら次へ進む"
+        ],
+        substeps: [
+          "下のコマンドをコピーして PowerShell に貼り付ける",
+          "Enter を押す",
+          "エラーなく実行できたら次へ進む"
+        ],
+        choices: [
+          { label: "作成できた", next: "win_launch_claude", summary: "作業フォルダを作成" }
         ]
       },
       win_launch_claude: {
@@ -574,7 +780,7 @@
         command: "cd C:\\work\\my-project\nclaude",
         choices: [
           { label: "起動できた", next: "win_first_message", summary: "Claude セッション開始" },
-          { label: "起動できない", next: "win_verify_claude", summary: "バージョン確認へ戻る" }
+          { label: "起動できない", next: "win_check_claude", summary: "Claude の確認へ戻る" }
         ]
       },
       win_first_message: {
@@ -592,10 +798,33 @@
         description: "下の確認コマンドを実行して、結果が出るか確認します。",
         command: "mdfind \"kMDItemFSName == 'Antigravity.app'\"",
         shellLabel: "Mac Terminal (zsh) で実行",
+        preSteps: [
+          "下の確認コマンドを実行して、結果が出るか確認します。",
+          "コマンドをコピーして Terminal に貼り付ける"
+        ],
+        postSteps: [
+          "Enter を押す",
+          "Antigravity.app のパスが表示されることを確認する"
+        ],
+        substeps: [
+          "下の確認コマンドを実行して、結果が出るか確認します。",
+          "コマンドをコピーして Terminal に貼り付ける",
+          "Enter を押す",
+          "Antigravity.app のパスが表示されることを確認する"
+        ],
+        expectedOutput: "/Applications/Antigravity.app",
         choices: [
-          { label: "インストール済み", next: "mac_check_brew", summary: "Antigravity は導入済み" },
+          { label: "インストール済み", next: "mac_phase1_complete", summary: "Antigravity は導入済み" },
           { label: "未インストール", next: "mac_install_antigravity", summary: "Antigravity をこれから導入" },
           { label: "結果が出ない", next: "mac_install_antigravity", summary: "Antigravity の確認と導入へ" }
+        ]
+      },
+      mac_phase1_complete: {
+        title: "Mac: Antigravity セットアップ完了",
+        description: "ここまでで第1フェーズは達成です。",
+        celebrate: true,
+        choices: [
+          { label: "次の工程（Claude Code準備）へ進む", next: "mac_check_brew", summary: "第2フェーズへ進行" }
         ]
       },
       mac_open_terminal: {
@@ -639,6 +868,19 @@
         title: "Mac: Git の確認をする",
         description: "ターミナルでバージョン確認します。",
         command: "git --version",
+        preSteps: [
+          "下のコマンドをコピーして Terminal に貼り付ける"
+        ],
+        postSteps: [
+          "Enter を押す",
+          "git version 2.x のような表示が出れば OK"
+        ],
+        substeps: [
+          "下のコマンドをコピーして Terminal に貼り付ける",
+          "Enter を押す",
+          "git version 2.x のような表示が出れば OK"
+        ],
+        expectedOutput: "git version 2.47.1",
         choices: [
           { label: "表示された", next: "mac_check_node", summary: "Git は利用可能" },
           { label: "表示されなかった", next: "mac_install_git", summary: "Git の導入が必要" },
@@ -656,12 +898,47 @@
       },
       mac_check_node: {
         title: "Mac: Node.js の確認をする",
-        description: "v18 以上が表示されるか確認します。",
-        command: "node --version\nnpm --version",
+        description: "まず Node 本体の確認です。",
+        command: "node --version",
+        preSteps: [
+          "下のコマンドをコピーして Terminal に貼り付ける"
+        ],
+        postSteps: [
+          "Enter を押す",
+          "v18 以上が表示されることを確認する"
+        ],
+        substeps: [
+          "下のコマンドをコピーして Terminal に貼り付ける",
+          "Enter を押す",
+          "v18 以上が表示されることを確認する"
+        ],
+        expectedOutput: "v24.13.1",
         choices: [
-          { label: "v18以上が表示された", next: "mac_install_claude", summary: "Node.js は利用可能" },
+          { label: "v18以上が表示された", next: "mac_check_npm", summary: "Node.js は利用可能" },
           { label: "表示されなかった", next: "mac_install_node", summary: "Node.js の導入が必要" },
           { label: "わからないので導入へ", next: "mac_install_node", summary: "Node.js 導入手順へ進む" }
+        ]
+      },
+      mac_check_npm: {
+        title: "Mac: npm の確認をする",
+        description: "次に npm を確認します。",
+        command: "npm --version",
+        preSteps: [
+          "下のコマンドをコピーして Terminal に貼り付ける"
+        ],
+        postSteps: [
+          "Enter を押す",
+          "数字のバージョンが表示されることを確認する"
+        ],
+        substeps: [
+          "下のコマンドをコピーして Terminal に貼り付ける",
+          "Enter を押す",
+          "数字のバージョンが表示されることを確認する"
+        ],
+        expectedOutput: "10.9.2",
+        choices: [
+          { label: "表示された", next: "mac_check_claude", summary: "npm は利用可能" },
+          { label: "表示されなかった", next: "mac_install_node", summary: "Node.js 再導入が必要" }
         ]
       },
       mac_install_node: {
@@ -670,7 +947,29 @@
         command: "brew install node",
         choices: [
           { label: "インストールできた", next: "mac_check_node", summary: "Node.js のインストール完了" },
-          { label: "既に入っていたので次へ", next: "mac_install_claude", summary: "Node.js は既存のためスキップ" }
+          { label: "既に入っていたので次へ", next: "mac_check_npm", summary: "Node.js は既存のためスキップ" }
+        ]
+      },
+      mac_check_claude: {
+        title: "Mac: Claude Code の存在確認",
+        description: "先にインストール済みか確認します。",
+        command: "claude --version",
+        preSteps: [
+          "下のコマンドをコピーして Terminal に貼り付ける"
+        ],
+        postSteps: [
+          "Enter を押す",
+          "バージョンが表示されたらインストール済み"
+        ],
+        substeps: [
+          "下のコマンドをコピーして Terminal に貼り付ける",
+          "Enter を押す",
+          "バージョンが表示されたらインストール済み"
+        ],
+        expectedOutput: "1.0.0 などのバージョン表示",
+        choices: [
+          { label: "表示された", next: "mac_make_workdir", summary: "Claude Code は導入済み" },
+          { label: "表示されなかった", next: "mac_install_claude", summary: "Claude Code の導入へ進む" }
         ]
       },
       mac_install_claude: {
@@ -678,17 +977,16 @@
         description: "公式インストーラを実行します。",
         command: "curl -fsSL https://claude.ai/install.sh | bash",
         choices: [
-          { label: "実行した", next: "mac_verify_claude", summary: "Claude Code インストーラを実行" },
-          { label: "既に入っているので次へ", next: "mac_verify_claude", summary: "Claude Code 導入をスキップ" }
+          { label: "実行した", next: "mac_check_claude", summary: "Claude Code インストーラを実行" },
+          { label: "既に入っているので次へ", next: "mac_check_claude", summary: "Claude Code 導入をスキップ" }
         ]
       },
-      mac_verify_claude: {
-        title: "Mac: claude --version を確認する",
-        description: "ターミナルを開き直してから実行します。",
-        command: "claude --version",
+      mac_make_workdir: {
+        title: "Mac: 作業フォルダを作る",
+        description: "まず作業フォルダを作成します。",
+        command: "mkdir -p ~/work/my-project",
         choices: [
-          { label: "バージョンが表示された", next: "mac_launch_claude", summary: "Claude Code の起動準備完了" },
-          { label: "まだ表示されない", next: "mac_install_claude", summary: "Claude Code の再導入へ戻る" }
+          { label: "作成できた", next: "mac_launch_claude", summary: "作業フォルダを作成" }
         ]
       },
       mac_launch_claude: {
@@ -697,7 +995,7 @@
         command: "cd ~/work/my-project\nclaude",
         choices: [
           { label: "起動できた", next: "mac_first_message", summary: "Claude セッション開始" },
-          { label: "起動できない", next: "mac_verify_claude", summary: "バージョン確認へ戻る" }
+          { label: "起動できない", next: "mac_check_claude", summary: "Claude の確認へ戻る" }
         ]
       },
       mac_first_message: {
@@ -717,17 +1015,18 @@
     };
 
     const goalStepIds = [
-      "win_open_terminal", "win_check_antigravity", "win_check_git", "win_prepare_path", "win_check_node",
-      "win_install_claude", "win_verify_claude", "win_launch_claude", "win_first_message",
-      "mac_open_terminal", "mac_check_antigravity", "mac_check_brew", "mac_check_git", "mac_check_node",
-      "mac_install_claude", "mac_verify_claude", "mac_launch_claude", "mac_first_message"
+      "win_open_terminal", "win_check_antigravity", "win_phase1_complete", "win_check_git", "win_prepare_path",
+      "win_check_node", "win_check_npm", "win_check_claude", "win_make_workdir", "win_launch_claude", "win_first_message",
+      "mac_open_terminal", "mac_check_antigravity", "mac_phase1_complete", "mac_check_brew", "mac_check_git", "mac_check_node",
+      "mac_check_npm", "mac_check_claude", "mac_make_workdir", "mac_launch_claude", "mac_first_message"
     ];
 
     const state = {
       started: false,
       currentNodeId: null,
       history: [],
-      substepProgress: {}
+      substepProgress: {},
+      flow: null
     };
 
     const startBtn = document.getElementById("startBtn");
@@ -752,6 +1051,7 @@
       state.currentNodeId = null;
       state.history = [];
       state.substepProgress = {};
+      state.flow = null;
       tree.innerHTML = "";
       tree.style.display = "none";
       finish.style.display = "none";
@@ -764,13 +1064,7 @@
 
       if (!state.started || !state.currentNodeId) return;
 
-      const completeCount = state.history
-        .map(item => item.nodeId)
-        .filter(id => goalStepIds.includes(id)).length;
-      const isMacFlow = state.history.some(item => item.summary.includes("Macルート"));
-      const isWinFlow = state.history.some(item => item.summary.includes("Windowsルート"));
-      const flowTotal = isMacFlow || isWinFlow ? 9 : 18;
-      status.textContent = `進捗 ${Math.min(completeCount, flowTotal)}/${flowTotal} 完了  -  次の1手だけを表示中`;
+      renderPhaseProgress();
 
       for (const entry of state.history) {
         tree.appendChild(renderHistoryNode(entry));
@@ -781,7 +1075,7 @@
 
       if (state.currentNodeId === "done") {
         finish.style.display = "block";
-        status.textContent = `進捗 9/9 完了  -  ゴール到達`;
+        renderPhaseProgress(true);
         return;
       }
 
@@ -796,9 +1090,8 @@
       wrap.innerHTML = `
         <div class="node-head">
           <h3>${escapeHtml(nodes[entry.nodeId].title)}</h3>
-          <span class="badge">✓ 完了</span>
+          <img class="history-icon" src="./assets/yes.png" alt="done">
         </div>
-        <div class="done-summary">${escapeHtml(entry.summary)}</div>
       `;
       return wrap;
     }
@@ -818,6 +1111,10 @@
         wrap.appendChild(p);
       }
 
+      if (node.celebrate) {
+        wrap.appendChild(createCelebrateBand());
+      }
+
       if (node.reassurance) {
         const reassure = document.createElement("div");
         reassure.className = "reassure";
@@ -825,24 +1122,23 @@
         wrap.appendChild(reassure);
       }
 
-      if (node.actionGuide) {
-        const guide = document.createElement("div");
-        guide.className = "action-guide";
-        guide.textContent = node.actionGuide;
-        wrap.appendChild(guide);
-      }
-
-      if (node.expectedOutput) {
-        wrap.appendChild(createExpectedBlock(node.expectedOutput));
-      }
-
-      if (node.substeps && node.substeps.length) {
-        wrap.appendChild(renderSubsteps(nodeId, node));
+      if (node.substeps && node.substeps.length && node.preSteps && node.preSteps.length) {
+        wrap.appendChild(renderSubsteps(nodeId, node, "pre"));
       }
 
       if (node.command) {
         const shellLabel = getShellLabel(nodeId, node);
         wrap.appendChild(createCodeCard(node.command, shellLabel));
+      }
+
+      if (node.substeps && node.substeps.length && node.postSteps && node.postSteps.length) {
+        wrap.appendChild(renderSubsteps(nodeId, node, "post"));
+      } else if (node.substeps && node.substeps.length && (!node.preSteps || !node.postSteps)) {
+        wrap.appendChild(renderSubsteps(nodeId, node, "all"));
+      }
+
+      if (node.expectedOutput) {
+        wrap.appendChild(createExpectedBlock(node.expectedOutput));
       }
 
       if (node.choices && node.choices.length) {
@@ -860,6 +1156,7 @@
             b.title = "先にこの工程内のチェックを完了してください";
           }
           b.addEventListener("click", () => {
+            if (choice.flow) state.flow = choice.flow;
             state.history.push({
               nodeId,
               summary: choice.summary || `${choice.label} を選択`
@@ -878,6 +1175,35 @@
       }
 
       return wrap;
+    }
+
+    function renderPhaseProgress(forceComplete = false) {
+      const flow = state.flow || (state.history.some(item => item.summary.includes("Macルート")) ? "mac" : "win");
+      const phase1Nodes = flow === "mac"
+        ? ["mac_open_terminal", "mac_check_antigravity", "mac_phase1_complete"]
+        : ["win_open_terminal", "win_check_antigravity", "win_phase1_complete"];
+      const phase2Nodes = flow === "mac"
+        ? ["mac_check_brew", "mac_check_git", "mac_check_node", "mac_check_npm", "mac_check_claude", "mac_make_workdir", "mac_launch_claude", "mac_first_message"]
+        : ["win_check_git", "win_prepare_path", "win_restart_shell", "win_check_node", "win_check_npm", "win_check_claude", "win_make_workdir", "win_launch_claude", "win_first_message"];
+
+      const doneSet = new Set(state.history.map(h => h.nodeId));
+      const p1Done = forceComplete ? phase1Nodes.length : phase1Nodes.filter(id => doneSet.has(id)).length;
+      const p2Done = forceComplete ? phase2Nodes.length : phase2Nodes.filter(id => doneSet.has(id)).length;
+      const p1Rate = Math.max(0, Math.min(100, (p1Done / phase1Nodes.length) * 100));
+      const p2Rate = Math.max(0, Math.min(100, (p2Done / phase2Nodes.length) * 100));
+
+      status.innerHTML = `
+        <div class="phase-bars">
+          <div class="phase-row">
+            <div class="phase-dot"><img src="${p1Rate >= 100 ? "./assets/yes.png" : "./assets/no.png"}" alt="phase1"></div>
+            <div class="phase-bar"><div class="phase-fill" style="width:${p1Rate}%;"></div></div>
+          </div>
+          <div class="phase-row">
+            <div class="phase-dot"><img src="${p2Rate >= 100 ? "./assets/yes.png" : "./assets/no.png"}" alt="phase2"></div>
+            <div class="phase-bar"><div class="phase-fill" style="width:${p2Rate}%;"></div></div>
+          </div>
+        </div>
+      `;
     }
 
     function getShellLabel(nodeId, node) {
@@ -917,14 +1243,23 @@
       render();
     }
 
-    function renderSubsteps(nodeId, node) {
+    function renderSubsteps(nodeId, node, mode = "all") {
       const wrap = document.createElement("section");
       wrap.className = "substeps";
 
       const progress = getSubstepState(nodeId, node);
       const firstIncomplete = progress.findIndex(done => !done);
+      let indices = node.substeps.map((_v, idx) => idx);
+      if (mode === "pre" && node.preSteps) {
+        indices = node.preSteps.map((_, idx) => idx);
+      }
+      if (mode === "post" && node.postSteps) {
+        const start = (node.preSteps || []).length;
+        indices = node.postSteps.map((_, idx) => idx + start);
+      }
 
-      node.substeps.forEach((label, idx) => {
+      indices.forEach((idx) => {
+        const label = node.substeps[idx];
         const row = document.createElement("div");
         row.className = "substep-row";
 
@@ -962,6 +1297,21 @@
         : "今やる手順のみ濃く表示されます。上から順にチェックしてください。";
       wrap.appendChild(note);
 
+      return wrap;
+    }
+
+    function createCelebrateBand() {
+      const wrap = document.createElement("div");
+      wrap.className = "celebrate";
+      const colors = ["#4ecb88", "#7edcaa", "#2b9983", "#f4c95d", "#7fa4ff"];
+      for (let i = 0; i < 18; i += 1) {
+        const c = document.createElement("span");
+        c.className = "confetti";
+        c.style.left = `${Math.floor(Math.random() * 100)}%`;
+        c.style.background = colors[i % colors.length];
+        c.style.animationDelay = `${(i % 6) * 50}ms`;
+        wrap.appendChild(c);
+      }
       return wrap;
     }
 
