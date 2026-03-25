@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Claude Code セットアップナビ</title>
+  <style>
+    :root {
+      --bg: #eceff1;
+      --panel: #f7f8f9;
+      --ink: #15202b;
+      --muted: #506170;
+      --line: #cad2da;
+      --accent: #1d7b72;
+      --accent-ink: #ffffff;
+      --card-bg: #2b2f34;
+      --card-line: #454c56;
+      --card-ink: #f3f4f6;
+      --card-muted: #c9ced6;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "BIZ UDPGothic", "Yu Gothic UI", "Meiryo", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1000px 400px at 10% -10%, #ffffff 0%, transparent 65%),
+        radial-gradient(700px 350px at 100% 0%, #e3eaee 0%, transparent 70%),
+        var(--bg);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 28px 18px 56px;
+    }
+
+    .hero {
+      background: linear-gradient(165deg, #f7f9fa 0%, #eef2f4 100%);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 8px 28px rgba(16, 24, 40, 0.05);
+      margin-bottom: 20px;
+    }
+
+    .title {
+      margin: 0 0 8px;
+      font-size: clamp(1.5rem, 3.4vw, 2rem);
+      letter-spacing: 0.02em;
+    }
+
+    .lead {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 0.97rem;
+    }
+
+    .start-wrap { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .helper {
+      margin-top: 14px;
+      border: 1px solid #d3dae2;
+      background: #f2f5f7;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 0.88rem;
+      color: #3f5161;
+    }
+    .helper strong {
+      color: #263646;
+      font-size: 0.9rem;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .btn-main {
+      background: var(--accent);
+      color: var(--accent-ink);
+      box-shadow: 0 8px 20px rgba(29, 123, 114, 0.28);
+    }
+
+    .btn-secondary {
+      background: #e5eaef;
+      color: #1e2a35;
+      border: 1px solid #c9d2da;
+    }
+
+    .status {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 14px;
+      color: #344453;
+      margin-bottom: 16px;
+      display: none;
+      font-size: 0.93rem;
+    }
+
+    .tree {
+      position: relative;
+      margin-left: 16px;
+      padding-left: 24px;
+      border-left: 2px dashed #bfc9d2;
+      display: none;
+    }
+
+    .node {
+      position: relative;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      margin: 0 0 16px;
+      animation: fadeIn 220ms ease;
+    }
+
+    .node::before {
+      content: "";
+      position: absolute;
+      width: 16px;
+      border-top: 2px dashed #bfc9d2;
+      left: -24px;
+      top: 26px;
+    }
+
+    .node-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .node h3 {
+      margin: 0;
+      font-size: 1.03rem;
+      line-height: 1.35;
+    }
+
+    .badge {
+      font-size: 0.8rem;
+      color: #0f5f46;
+      background: #d6f0e7;
+      border: 1px solid #a4d9c7;
+      border-radius: 999px;
+      padding: 2px 8px;
+      white-space: nowrap;
+    }
+
+    .node p {
+      margin: 0 0 10px;
+      color: #3d4f5f;
+      font-size: 0.93rem;
+    }
+
+    .choices {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .choice-btn {
+      background: #edf2f6;
+      border: 1px solid #c8d3dd;
+      color: #20303f;
+      padding: 9px 12px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .done-summary {
+      margin-top: 8px;
+      font-size: 0.88rem;
+      color: #485b6c;
+      border-top: 1px dashed #ccd4dc;
+      padding-top: 8px;
+    }
+
+    .ps-card {
+      border: 1px solid var(--card-line);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--card-bg);
+      margin: 8px 0 6px;
+    }
+
+    .ps-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: #343940;
+      border-bottom: 1px solid var(--card-line);
+      color: var(--card-muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .copy-btn {
+      border: 1px solid #606b79;
+      background: #3f4650;
+      color: var(--card-ink);
+      font-size: 0.78rem;
+      padding: 6px 9px;
+      border-radius: 9px;
+      font-weight: 700;
+    }
+
+    pre {
+      margin: 0;
+      padding: 12px;
+      color: var(--card-ink);
+      overflow-x: auto;
+      font-family: "Cascadia Code", "Consolas", monospace;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      background: var(--card-bg);
+      white-space: pre;
+    }
+
+    .complete {
+      display: inline-block;
+      margin-top: 8px;
+      background: #dceee8;
+      border: 1px solid #b0d8cb;
+      color: #145849;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.86rem;
+    }
+
+    .finish {
+      border: 1px solid #b8d4c8;
+      background: #eef9f4;
+      color: #144e40;
+      border-radius: 14px;
+      padding: 16px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 640px) {
+      .container { padding: 16px 12px 40px; }
+      .hero { padding: 18px; border-radius: 14px; }
+      .tree { margin-left: 6px; padding-left: 16px; }
+      .node::before { width: 10px; left: -16px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <section class="hero">
+      <h1 class="title">Claude Code セットアップナビ</h1>
+      <p class="lead">最初に見えるのは次の1手だけ。完了チェックで一歩ずつ進めて、「最初の一言」まで到達します。</p>
+      <div class="start-wrap">
+        <button id="startBtn" class="btn-main">まずは始める</button>
+        <button id="resetBtn" class="btn-secondary" type="button">最初からやり直す</button>
+      </div>
+      <div class="helper">
+        <strong>補足:</strong> ブラウザから PowerShell / Terminal を直接起動することは通常できません。最初のノードで開き方を案内します。
+      </div>
+    </section>
+
+    <div id="status" class="status"></div>
+    <section id="tree" class="tree" aria-live="polite"></section>
+    <section id="finish" class="finish">
+      <strong>セットアップ完了</strong>
+      <p>最初の一言を送り、返事を受け取るところまで到達できました。</p>
+    </section>
+  </main>
+
+  <script>
+    const nodes = {
+      select_os: {
+        title: "使っているOSを選んでください",
+        description: "ここで選ぶと、そのOS向けの手順だけ表示します。",
+        choices: [
+          { label: "Windowsで進める", next: "win_open_terminal", summary: "Windowsルートを選択" },
+          { label: "Macで進める", next: "mac_open_terminal", summary: "Macルートを選択" }
+        ]
+      },
+
+      win_open_terminal: {
+        title: "Windows: まず PowerShell を開く",
+        description: "Windowsキー + R を押して、下の文字を貼り付けて Enter を押します。",
+        command: "powershell",
+        shellLabel: "Win + R に入力",
+        choices: [
+          { label: "PowerShell を開けた", next: "win_check_antigravity", summary: "PowerShell を起動" }
+        ]
+      },
+
+      win_check_antigravity: {
+        title: "Windows: Antigravity のインストール確認",
+        description: "下の確認コマンドを実行して、結果が出るか確認します。",
+        command: "$apps = @()\n$apps += Get-ItemProperty HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* -ErrorAction SilentlyContinue\n$apps += Get-ItemProperty HKLM:\\Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* -ErrorAction SilentlyContinue\n$apps += Get-ItemProperty HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* -ErrorAction SilentlyContinue\n$apps | Where-Object { $_.DisplayName -match 'Antigravity' } | Select-Object -First 1 DisplayName, DisplayVersion",
+        choices: [
+          { label: "インストール済み", next: "win_check_git", summary: "Antigravity は導入済み" },
+          { label: "未インストール", next: "win_install_antigravity", summary: "Antigravity をこれから導入" },
+          { label: "結果が出ない", next: "win_install_antigravity", summary: "Antigravity の確認と導入へ" }
+        ]
+      },
+      win_install_antigravity: {
+        title: "Windows: Antigravity を導入する",
+        description: "公式ページを開いて Windows 版をインストールし、起動確認します。",
+        command: "start https://antigravity.google/",
+        choices: [
+          { label: "導入と起動確認ができた", next: "win_check_antigravity", summary: "Antigravity の導入完了" }
+        ]
+      },
+      win_check_git: {
+        title: "Windows: Git の確認をする",
+        description: "PowerShell でバージョン確認します。",
+        command: "git --version",
+        choices: [
+          { label: "表示された", next: "win_prepare_path", summary: "Git は利用可能" },
+          { label: "表示されなかった", next: "win_install_git", summary: "Git の導入が必要" },
+          { label: "わからないので次へ", next: "win_install_git", summary: "Git 導入手順へ進む" }
+        ]
+      },
+      win_install_git: {
+        title: "Windows: Git をインストールする",
+        description: "インストール後、確認コマンドを再実行します。",
+        command: "winget install -e --id Git.Git",
+        choices: [
+          { label: "インストールできた", next: "win_check_git", summary: "Git のインストール完了" },
+          { label: "既に入っていたので次へ", next: "win_prepare_path", summary: "Git は既存のためスキップ" }
+        ]
+      },
+      win_prepare_path: {
+        title: "Windows: PATH 用フォルダを準備する",
+        description: "次をそのまま実行します。既に済んでいればスキップ可能です。",
+        command: "mkdir $env:USERPROFILE\\.local\\bin -Force\n\n$currentPath = [Environment]::GetEnvironmentVariable('PATH', 'User')\nif ($currentPath -notlike \"*$env:USERPROFILE\\.local\\bin*\") {\n  [Environment]::SetEnvironmentVariable(\n    'PATH',\n    \"$currentPath;$env:USERPROFILE\\.local\\bin\",\n    'User'\n  )\n}",
+        choices: [
+          { label: "実行した", next: "win_restart_shell", summary: "PATH 設定を実行" },
+          { label: "すでに設定済み", next: "win_restart_shell", summary: "PATH 設定をスキップ" }
+        ]
+      },
+      win_restart_shell: {
+        title: "Windows: PowerShell を開き直す",
+        description: "PATH 反映のため、PowerShell を完全に閉じて開き直します。",
+        choices: [
+          { label: "開き直した", next: "win_check_node", summary: "PowerShell を再起動" }
+        ]
+      },
+      win_check_node: {
+        title: "Windows: Node.js の確認をする",
+        description: "v18 以上が表示されるか確認します。",
+        command: "node --version\nnpm --version",
+        choices: [
+          { label: "v18以上が表示された", next: "win_install_claude", summary: "Node.js は利用可能" },
+          { label: "表示されなかった", next: "win_install_node", summary: "Node.js の導入が必要" },
+          { label: "わからないので導入へ", next: "win_install_node", summary: "Node.js 導入手順へ進む" }
+        ]
+      },
+      win_install_node: {
+        title: "Windows: Node.js をインストールする",
+        description: "インストール後に確認を実行します。",
+        command: "winget install -e --id OpenJS.NodeJS",
+        choices: [
+          { label: "インストールできた", next: "win_check_node", summary: "Node.js のインストール完了" },
+          { label: "既に入っていたので次へ", next: "win_install_claude", summary: "Node.js は既存のためスキップ" }
+        ]
+      },
+      win_install_claude: {
+        title: "Windows: Claude Code をインストールする",
+        description: "公式インストーラを実行します。",
+        command: "irm https://claude.ai/install.ps1 | iex",
+        choices: [
+          { label: "実行した", next: "win_verify_claude", summary: "Claude Code インストーラを実行" },
+          { label: "既に入っているので次へ", next: "win_verify_claude", summary: "Claude Code 導入をスキップ" }
+        ]
+      },
+      win_verify_claude: {
+        title: "Windows: claude --version を確認する",
+        description: "PowerShell を開き直してから実行します。",
+        command: "claude --version",
+        choices: [
+          { label: "バージョンが表示された", next: "win_launch_claude", summary: "Claude Code の起動準備完了" },
+          { label: "Git Bash エラーが出た", next: "win_set_gitbash_path", summary: "Git Bash パス設定へ進む" },
+          { label: "まだ表示されない", next: "win_install_claude", summary: "Claude Code の再導入へ戻る" }
+        ]
+      },
+      win_set_gitbash_path: {
+        title: "Windows: Git Bash の場所を設定する",
+        description: "次を実行後、もう一度バージョン確認します。",
+        command: "$env:CLAUDE_CODE_GIT_BASH_PATH=\"C:\\Program Files\\Git\\bin\\bash.exe\"\nclaude --version",
+        choices: [
+          { label: "うまくいった", next: "win_launch_claude", summary: "Git Bash パス設定を反映" },
+          { label: "まだだめ", next: "win_check_git", summary: "Git 確認に戻る" }
+        ]
+      },
+      win_launch_claude: {
+        title: "Windows: claude を起動する",
+        description: "作業フォルダで実行し、ブラウザ認証を完了します。",
+        command: "cd C:\\work\\my-project\nclaude",
+        choices: [
+          { label: "起動できた", next: "win_first_message", summary: "Claude セッション開始" },
+          { label: "起動できない", next: "win_verify_claude", summary: "バージョン確認へ戻る" }
+        ]
+      },
+      win_first_message: {
+        title: "Windows: 最初の一言を打つ",
+        description: "次の文を送って返事が来るか確認します。",
+        command: "こんにちは。セットアップできていますか？",
+        choices: [
+          { label: "返事が来た", next: "done", summary: "初回メッセージ送信完了" },
+          { label: "返事が来ない", next: "win_launch_claude", summary: "起動確認へ戻る" }
+        ]
+      },
+
+      mac_check_antigravity: {
+        title: "Mac: Antigravity のインストール確認",
+        description: "下の確認コマンドを実行して、結果が出るか確認します。",
+        command: "mdfind \"kMDItemFSName == 'Antigravity.app'\"",
+        shellLabel: "Mac Terminal (zsh) で実行",
+        choices: [
+          { label: "インストール済み", next: "mac_check_brew", summary: "Antigravity は導入済み" },
+          { label: "未インストール", next: "mac_install_antigravity", summary: "Antigravity をこれから導入" },
+          { label: "結果が出ない", next: "mac_install_antigravity", summary: "Antigravity の確認と導入へ" }
+        ]
+      },
+      mac_open_terminal: {
+        title: "Mac: まず Terminal を開く",
+        description: "下の方法で Terminal を開いてから、以降のコマンドを実行します。",
+        command: "方法A (おすすめ)\nCommand + Space を押す\n\"terminal\" と入力して Enter\n\n方法B\nLaunchpad から Terminal を開く",
+        shellLabel: "起動ガイド",
+        choices: [
+          { label: "Terminal を開けた", next: "mac_check_antigravity", summary: "Mac Terminal を起動" }
+        ]
+      },
+      mac_install_antigravity: {
+        title: "Mac: Antigravity を導入する",
+        description: "公式ページを開いて Mac 版をインストールし、起動確認します。",
+        command: "open https://antigravity.google/",
+        shellLabel: "Mac Terminal (zsh) で実行",
+        choices: [
+          { label: "導入と起動確認ができた", next: "mac_check_antigravity", summary: "Antigravity の導入完了" }
+        ]
+      },
+      mac_check_brew: {
+        title: "Mac: Homebrew の確認をする",
+        description: "Homebrew は Git / Node 導入で使います。",
+        command: "brew --version",
+        choices: [
+          { label: "表示された", next: "mac_check_git", summary: "Homebrew は利用可能" },
+          { label: "表示されなかった", next: "mac_install_brew", summary: "Homebrew の導入が必要" },
+          { label: "わからないので導入へ", next: "mac_install_brew", summary: "Homebrew 導入手順へ進む" }
+        ]
+      },
+      mac_install_brew: {
+        title: "Mac: Homebrew をインストールする",
+        description: "導入後、brew --version を再確認します。",
+        command: "/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"",
+        choices: [
+          { label: "インストールできた", next: "mac_check_brew", summary: "Homebrew のインストール完了" },
+          { label: "既に入っていたので次へ", next: "mac_check_git", summary: "Homebrew は既存のためスキップ" }
+        ]
+      },
+      mac_check_git: {
+        title: "Mac: Git の確認をする",
+        description: "ターミナルでバージョン確認します。",
+        command: "git --version",
+        choices: [
+          { label: "表示された", next: "mac_check_node", summary: "Git は利用可能" },
+          { label: "表示されなかった", next: "mac_install_git", summary: "Git の導入が必要" },
+          { label: "わからないので導入へ", next: "mac_install_git", summary: "Git 導入手順へ進む" }
+        ]
+      },
+      mac_install_git: {
+        title: "Mac: Git をインストールする",
+        description: "Homebrew で導入後、バージョン確認します。",
+        command: "brew install git",
+        choices: [
+          { label: "インストールできた", next: "mac_check_git", summary: "Git のインストール完了" },
+          { label: "既に入っていたので次へ", next: "mac_check_node", summary: "Git は既存のためスキップ" }
+        ]
+      },
+      mac_check_node: {
+        title: "Mac: Node.js の確認をする",
+        description: "v18 以上が表示されるか確認します。",
+        command: "node --version\nnpm --version",
+        choices: [
+          { label: "v18以上が表示された", next: "mac_install_claude", summary: "Node.js は利用可能" },
+          { label: "表示されなかった", next: "mac_install_node", summary: "Node.js の導入が必要" },
+          { label: "わからないので導入へ", next: "mac_install_node", summary: "Node.js 導入手順へ進む" }
+        ]
+      },
+      mac_install_node: {
+        title: "Mac: Node.js をインストールする",
+        description: "Homebrew で導入後、確認します。",
+        command: "brew install node",
+        choices: [
+          { label: "インストールできた", next: "mac_check_node", summary: "Node.js のインストール完了" },
+          { label: "既に入っていたので次へ", next: "mac_install_claude", summary: "Node.js は既存のためスキップ" }
+        ]
+      },
+      mac_install_claude: {
+        title: "Mac: Claude Code をインストールする",
+        description: "公式インストーラを実行します。",
+        command: "curl -fsSL https://claude.ai/install.sh | bash",
+        choices: [
+          { label: "実行した", next: "mac_verify_claude", summary: "Claude Code インストーラを実行" },
+          { label: "既に入っているので次へ", next: "mac_verify_claude", summary: "Claude Code 導入をスキップ" }
+        ]
+      },
+      mac_verify_claude: {
+        title: "Mac: claude --version を確認する",
+        description: "ターミナルを開き直してから実行します。",
+        command: "claude --version",
+        choices: [
+          { label: "バージョンが表示された", next: "mac_launch_claude", summary: "Claude Code の起動準備完了" },
+          { label: "まだ表示されない", next: "mac_install_claude", summary: "Claude Code の再導入へ戻る" }
+        ]
+      },
+      mac_launch_claude: {
+        title: "Mac: claude を起動する",
+        description: "作業フォルダで実行し、ブラウザ認証を完了します。",
+        command: "cd ~/work/my-project\nclaude",
+        choices: [
+          { label: "起動できた", next: "mac_first_message", summary: "Claude セッション開始" },
+          { label: "起動できない", next: "mac_verify_claude", summary: "バージョン確認へ戻る" }
+        ]
+      },
+      mac_first_message: {
+        title: "Mac: 最初の一言を打つ",
+        description: "次の文を送って返事が来るか確認します。",
+        command: "こんにちは。セットアップできていますか？",
+        choices: [
+          { label: "返事が来た", next: "done", summary: "初回メッセージ送信完了" },
+          { label: "返事が来ない", next: "mac_launch_claude", summary: "起動確認へ戻る" }
+        ]
+      },
+
+      done: {
+        title: "完了",
+        description: "セットアップ完了です。"
+      }
+    };
+
+    const goalStepIds = [
+      "win_open_terminal", "win_check_antigravity", "win_check_git", "win_prepare_path", "win_check_node",
+      "win_install_claude", "win_verify_claude", "win_launch_claude", "win_first_message",
+      "mac_open_terminal", "mac_check_antigravity", "mac_check_brew", "mac_check_git", "mac_check_node",
+      "mac_install_claude", "mac_verify_claude", "mac_launch_claude", "mac_first_message"
+    ];
+
+    const state = {
+      started: false,
+      currentNodeId: null,
+      history: []
+    };
+
+    const startBtn = document.getElementById("startBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const tree = document.getElementById("tree");
+    const status = document.getElementById("status");
+    const finish = document.getElementById("finish");
+
+    startBtn.addEventListener("click", () => {
+      if (state.started) return;
+      state.started = true;
+      state.currentNodeId = "select_os";
+      tree.style.display = "block";
+      status.style.display = "block";
+      render();
+    });
+
+    resetBtn.addEventListener("click", resetAll);
+
+    function resetAll() {
+      state.started = false;
+      state.currentNodeId = null;
+      state.history = [];
+      tree.innerHTML = "";
+      tree.style.display = "none";
+      finish.style.display = "none";
+      status.style.display = "none";
+      startBtn.disabled = false;
+    }
+
+    function render() {
+      tree.innerHTML = "";
+
+      if (!state.started || !state.currentNodeId) return;
+
+      const completeCount = state.history
+        .map(item => item.nodeId)
+        .filter(id => goalStepIds.includes(id)).length;
+      const isMacFlow = state.history.some(item => item.summary.includes("Macルート"));
+      const isWinFlow = state.history.some(item => item.summary.includes("Windowsルート"));
+      const flowTotal = isMacFlow || isWinFlow ? 9 : 18;
+      status.textContent = `進捗 ${Math.min(completeCount, flowTotal)}/${flowTotal} 完了  -  次の1手だけを表示中`;
+
+      for (const entry of state.history) {
+        tree.appendChild(renderHistoryNode(entry));
+      }
+
+      const current = nodes[state.currentNodeId];
+      if (!current) return;
+
+      if (state.currentNodeId === "done") {
+        finish.style.display = "block";
+        status.textContent = `進捗 9/9 完了  -  ゴール到達`;
+        return;
+      }
+
+      finish.style.display = "none";
+      tree.appendChild(renderActiveNode(state.currentNodeId, current));
+    }
+
+    function renderHistoryNode(entry) {
+      const wrap = document.createElement("article");
+      wrap.className = "node";
+
+      wrap.innerHTML = `
+        <div class="node-head">
+          <h3>${escapeHtml(nodes[entry.nodeId].title)}</h3>
+          <span class="badge">✓ 完了</span>
+        </div>
+        <div class="done-summary">${escapeHtml(entry.summary)}</div>
+      `;
+      return wrap;
+    }
+
+    function renderActiveNode(nodeId, node) {
+      const wrap = document.createElement("article");
+      wrap.className = "node";
+
+      const heading = document.createElement("div");
+      heading.className = "node-head";
+      heading.innerHTML = `<h3>${escapeHtml(node.title)}</h3>`;
+      wrap.appendChild(heading);
+
+      const p = document.createElement("p");
+      p.textContent = node.description;
+      wrap.appendChild(p);
+
+      if (node.command) {
+        const shellLabel = getShellLabel(nodeId, node);
+        wrap.appendChild(createCodeCard(node.command, shellLabel));
+      }
+
+      if (node.choices && node.choices.length) {
+        const choices = document.createElement("div");
+        choices.className = "choices";
+        node.choices.forEach(choice => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "choice-btn";
+          b.textContent = choice.label;
+          b.addEventListener("click", () => {
+            state.history.push({
+              nodeId,
+              summary: choice.summary || `${choice.label} を選択`
+            });
+            state.currentNodeId = choice.next;
+            render();
+          });
+          choices.appendChild(b);
+        });
+        wrap.appendChild(choices);
+      } else {
+        const done = document.createElement("span");
+        done.className = "complete";
+        done.textContent = "このノードは分岐なし";
+        wrap.appendChild(done);
+      }
+
+      return wrap;
+    }
+
+    function getShellLabel(nodeId, node) {
+      if (node.shellLabel) return node.shellLabel;
+      if (nodeId.startsWith("mac_")) return "Mac Terminal (zsh) で実行";
+      if (nodeId.startsWith("win_")) return "PowerShell で実行";
+      return "コマンド";
+    }
+
+    function createCodeCard(command, shellLabel = "コマンド") {
+      const card = document.createElement("section");
+      card.className = "ps-card";
+
+      const top = document.createElement("div");
+      top.className = "ps-top";
+      top.innerHTML = `<span>${shellLabel}</span>`;
+
+      const copy = document.createElement("button");
+      copy.type = "button";
+      copy.className = "copy-btn";
+      copy.textContent = "コピー";
+      copy.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(command);
+          copy.textContent = "コピーしました";
+          setTimeout(() => { copy.textContent = "コピー"; }, 1500);
+        } catch (_e) {
+          copy.textContent = "コピー失敗";
+          setTimeout(() => { copy.textContent = "コピー"; }, 1500);
+        }
+      });
+
+      top.appendChild(copy);
+      card.appendChild(top);
+
+      const pre = document.createElement("pre");
+      pre.textContent = command;
+      card.appendChild(pre);
+
+      return card;
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
