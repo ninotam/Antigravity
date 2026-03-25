@@ -123,6 +123,7 @@
       margin: 0 0 16px;
       animation: fadeIn 220ms ease;
       isolation: isolate;
+      transition: transform 220ms ease, opacity 220ms ease, padding 220ms ease, box-shadow 220ms ease;
     }
 
     .node::before {
@@ -134,34 +135,29 @@
       top: 26px;
     }
 
-    .node::after {
-      content: "";
-      position: absolute;
-      inset: -2px;
-      border-radius: 16px;
-      padding: 2px;
-      background: conic-gradient(
-        from 0deg,
-        rgba(91, 242, 142, 0.0),
-        rgba(91, 242, 142, 0.75),
-        rgba(170, 255, 199, 0.95),
-        rgba(91, 242, 142, 0.0)
-      );
-      animation: spin 3s linear infinite;
-      opacity: 0;
-      pointer-events: none;
-      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      z-index: 0;
-    }
-
     .node.active-node {
       border-color: #3fc772;
-      box-shadow: 0 0 0 2px rgba(63, 199, 114, 0.35), 0 0 26px rgba(63, 199, 114, 0.25);
+      box-shadow: 0 0 0 2px rgba(63, 199, 114, 0.22), 0 12px 30px rgba(29, 64, 46, 0.12);
+      transform: scale(1.01);
+      padding: 16px;
     }
 
-    .node.active-node::after { opacity: 1; }
+    .node.history-node {
+      opacity: 0.74;
+      transform: scale(0.965);
+      padding: 10px 11px;
+    }
+
+    .node.history-node h3 {
+      font-size: 0.92rem;
+      color: #465765;
+      font-weight: 700;
+    }
+
+    .node.history-node .done-summary {
+      font-size: 0.78rem;
+      color: #627382;
+    }
 
     .node-head {
       display: flex;
@@ -269,17 +265,8 @@
     }
 
     .substeps {
-      margin-top: 10px;
-      border: 1px solid #d2dae2;
-      background: #f5f7f9;
-      border-radius: 12px;
-      padding: 10px;
-    }
-
-    .substeps h4 {
-      margin: 0 0 8px;
-      font-size: 0.9rem;
-      color: #334a5e;
+      margin-top: 8px;
+      padding: 0;
     }
 
     .substep-row {
@@ -288,17 +275,18 @@
       gap: 10px;
       padding: 6px 4px;
       border-radius: 8px;
-      transition: background 150ms ease, opacity 150ms ease;
-      opacity: 0.5;
+      transition: background 150ms ease, opacity 150ms ease, transform 150ms ease;
+      opacity: 0.42;
     }
 
     .substep-row.current {
       background: #e1f4e8;
       opacity: 1;
+      transform: scale(1.01);
     }
 
     .substep-row.done {
-      opacity: 0.95;
+      opacity: 0.42;
     }
 
     .substep-toggle {
@@ -329,17 +317,19 @@
       font-size: 0.9rem;
       color: #687888;
       font-weight: 600;
+      transition: color 140ms ease, font-size 140ms ease, transform 140ms ease, opacity 140ms ease;
     }
 
     .substep-row.current .substep-text {
       color: #13352d;
       font-weight: 800;
+      font-size: 1rem;
     }
 
     .substep-row.done .substep-text {
-      color: #274f45;
-      text-decoration: line-through;
-      text-decoration-thickness: 1px;
+      color: #5d6b79;
+      font-size: 0.8rem;
+      opacity: 0.78;
     }
 
     .substep-note {
@@ -418,10 +408,6 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
 
     @media (max-width: 640px) {
       .container { padding: 16px 12px 40px; }
@@ -479,11 +465,10 @@
         description: "下の確認コマンドを実行して、結果が出るか確認します。",
         command: "$apps = @()\n$apps += Get-ItemProperty HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* -ErrorAction SilentlyContinue\n$apps += Get-ItemProperty HKLM:\\Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* -ErrorAction SilentlyContinue\n$apps += Get-ItemProperty HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* -ErrorAction SilentlyContinue\n$apps | Where-Object { $_.DisplayName -match 'Antigravity' } | Select-Object -First 1 DisplayName, DisplayVersion",
         reassurance: "貼り付け時に警告が出る場合がありますが、この手順では想定内です。続行して問題ありません。",
-        actionGuide: "コマンドをコピーして PowerShell に貼り付け、Enter を押してください。",
         expectedOutput: "DisplayName        DisplayVersion\n-----------        --------------\nAntigravity (User) 1.20.6",
         substeps: [
-          "コマンドをコピーする",
-          "PowerShell に貼り付ける",
+          "下の確認コマンドを実行して、結果が出るか確認します。",
+          "コマンドをコピーして PowerShell に貼り付ける",
           "Enter を押す",
           "DisplayName / DisplayVersion が表示されることを確認する"
         ],
@@ -806,7 +791,7 @@
 
     function renderHistoryNode(entry) {
       const wrap = document.createElement("article");
-      wrap.className = "node";
+      wrap.className = "node history-node";
 
       wrap.innerHTML = `
         <div class="node-head">
@@ -827,13 +812,10 @@
       heading.innerHTML = `<h3>${escapeHtml(node.title)}</h3>`;
       wrap.appendChild(heading);
 
-      const p = document.createElement("p");
-      p.textContent = node.description;
-      wrap.appendChild(p);
-
-      if (node.command) {
-        const shellLabel = getShellLabel(nodeId, node);
-        wrap.appendChild(createCodeCard(node.command, shellLabel));
+      if (!node.substeps || node.substeps.length === 0) {
+        const p = document.createElement("p");
+        p.textContent = node.description;
+        wrap.appendChild(p);
       }
 
       if (node.reassurance) {
@@ -856,6 +838,11 @@
 
       if (node.substeps && node.substeps.length) {
         wrap.appendChild(renderSubsteps(nodeId, node));
+      }
+
+      if (node.command) {
+        const shellLabel = getShellLabel(nodeId, node);
+        wrap.appendChild(createCodeCard(node.command, shellLabel));
       }
 
       if (node.choices && node.choices.length) {
@@ -933,10 +920,6 @@
     function renderSubsteps(nodeId, node) {
       const wrap = document.createElement("section");
       wrap.className = "substeps";
-
-      const heading = document.createElement("h4");
-      heading.textContent = "この工程のチェック";
-      wrap.appendChild(heading);
 
       const progress = getSubstepState(nodeId, node);
       const firstIncomplete = progress.findIndex(done => !done);
