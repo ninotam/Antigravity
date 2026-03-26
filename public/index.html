@@ -301,13 +301,6 @@
       padding-top: 8px;
     }
 
-    .history-icon {
-      width: 14px;
-      height: 14px;
-      display: inline-block;
-      opacity: 0.92;
-    }
-
     .substeps {
       margin-top: 8px;
       padding: 0;
@@ -1145,7 +1138,6 @@
 
       wrap.innerHTML = `
         <div class="node-head">
-          <img class="history-icon" src="./assets/yes.png" alt="done">
           <h3>${escapeHtml(nodes[entry.nodeId].title)}</h3>
         </div>
       `;
@@ -1158,7 +1150,7 @@
 
       const heading = document.createElement("div");
       heading.className = "node-head";
-      heading.innerHTML = `<img class="history-icon" src="./assets/no.png" alt="todo"><h3>${escapeHtml(node.title)}</h3>`;
+      heading.innerHTML = `<h3>${escapeHtml(node.title)}</h3>`;
       wrap.appendChild(heading);
 
       if (!node.substeps || node.substeps.length === 0) {
