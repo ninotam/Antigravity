@@ -406,22 +406,20 @@
       border: 1px solid #ced8e2;
       border-radius: 8px;
       background: #f4f7fa;
-      padding: 10px 12px 10px 44px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
       flex: 1;
       line-height: 1.72;
-      position: relative;
     }
 
     .substep-dot {
       width: 20px;
       height: 20px;
+      flex-shrink: 0;
       object-fit: contain;
-      margin-top: 0;
       opacity: 0.94;
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
       pointer-events: none;
     }
 
@@ -510,8 +508,8 @@
     }
 
     .copy-btn video {
-      width: 66px;
-      height: 66px;
+      width: 198px;
+      height: 198px;
       object-fit: contain;
       display: block;
     }
@@ -551,7 +549,21 @@
       align-items: center;
       gap: 4px;
       vertical-align: middle;
-      margin: 0 2px;
+      margin: 0 3px;
+      border-radius: 5px;
+      padding: 1px 7px 1px 5px;
+      border: 1px solid;
+      font-size: 0.9em;
+    }
+
+    .inline-shell.inline-shell-ps {
+      background: #eef4ff;
+      border-color: #b8d0f7;
+    }
+
+    .inline-shell.inline-shell-term {
+      background: #e8f5ef;
+      border-color: #a5cfc0;
     }
 
     .inline-shell img {
@@ -562,7 +574,12 @@
     }
 
     .inline-shell .shell-blue {
-      color: #5caeff;
+      color: #3b82f6;
+      font-weight: 800;
+    }
+
+    .inline-shell .shell-green {
+      color: #1d7b72;
       font-weight: 800;
     }
 
@@ -682,7 +699,6 @@
       inset: 0;
       pointer-events: none;
       z-index: 9999;
-      overflow: hidden;
     }
 
     .screen-burst::before {
@@ -690,13 +706,30 @@
       position: absolute;
       inset: 0;
       background: rgba(14, 22, 30, 0.28);
-      animation: burst-dim 1500ms ease forwards;
+      animation: burst-dim 2000ms ease forwards;
     }
 
     @keyframes burst-dim {
       0% { opacity: 0; }
-      20% { opacity: 1; }
+      15% { opacity: 1; }
       100% { opacity: 0; }
+    }
+
+    .screen-burst-confetti {
+      position: absolute;
+      width: 10px;
+      height: 16px;
+      border-radius: 3px;
+      opacity: 0;
+      z-index: 1;
+      animation: screen-burst-fall 2000ms ease forwards;
+    }
+
+    @keyframes screen-burst-fall {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+      12%  { opacity: 1; }
+      85%  { opacity: 1; }
+      100% { transform: translateY(100vh) rotate(400deg); opacity: 0; }
     }
 
 
@@ -1534,8 +1567,8 @@
           }
         }
 
+        text.insertBefore(dot, text.firstChild);
         row.appendChild(text);
-        text.appendChild(dot);
         wrap.appendChild(row);
       });
 
@@ -1689,8 +1722,8 @@
     function formatInstructionText(text) {
       if (!text) return "";
       let html = escapeHtml(text);
-      html = html.replace(/powershell/gi, '<span class="inline-shell"><img src="./assets/Powershell.png" alt="PowerShell"><span class="shell-blue">PowerShell</span></span>');
-      html = html.replace(/terminal/gi, '<span class="inline-shell"><img src="./assets/Terminal.png" alt="Terminal"><span class="shell-blue">Terminal</span></span>');
+      html = html.replace(/powershell/gi, '<span class="inline-shell inline-shell-ps"><img src="./assets/Powershell.png" alt="PowerShell"><span class="shell-blue">PowerShell</span></span>');
+      html = html.replace(/terminal/gi, '<span class="inline-shell inline-shell-term"><img src="./assets/Terminal.png" alt="Terminal"><span class="shell-green">Terminal</span></span>');
       return html;
     }
 
@@ -1700,15 +1733,15 @@
       const colors = ["#4ecb88", "#7edcaa", "#2b9983", "#f4c95d", "#7fa4ff"];
       for (let i = 0; i < 52; i += 1) {
         const c = document.createElement("span");
-        c.className = "confetti";
+        c.className = "screen-burst-confetti";
         c.style.left = `${Math.floor(Math.random() * 100)}%`;
-        c.style.top = `${Math.floor(Math.random() * 22)}%`;
+        c.style.top = `${5 + Math.floor(Math.random() * 20)}%`;
         c.style.background = colors[i % colors.length];
-        c.style.animationDelay = `${(i % 10) * 40}ms`;
+        c.style.animationDelay = `${(i % 10) * 50}ms`;
         layer.appendChild(c);
       }
       document.body.appendChild(layer);
-      setTimeout(() => layer.remove(), 1500);
+      setTimeout(() => layer.remove(), 2000);
     }
 
     function escapeHtml(text) {
