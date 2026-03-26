@@ -608,6 +608,37 @@
       white-space: pre;
     }
 
+    .ps-body {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ps-body.ps-collapsed pre {
+      max-height: calc(2 * 1.55 * 0.9rem + 24px);
+      overflow: hidden;
+      mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+    }
+
+    .ps-toggle-btn {
+      width: 100%;
+      text-align: center;
+      background: #343940;
+      border: none;
+      border-top: 1px solid var(--card-line);
+      color: #8d9aaa;
+      padding: 6px 0;
+      font-size: 0.78rem;
+      cursor: pointer;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .ps-toggle-btn:hover {
+      background: #3f4650;
+      color: #c9ced6;
+    }
+
     .complete {
       display: inline-block;
       margin-top: 8px;
@@ -824,7 +855,7 @@
       },
       win_phase1_complete: {
         title: "Windows: Antigravity セットアップ完了",
-        description: "ここまでで第1フェーズは達成です。",
+        description: "",
         celebrate: true,
         choices: [
           { label: "次の工程（Claude Code準備）へ進む", next: "win_check_git", summary: "第2フェーズへ進行" }
@@ -1075,7 +1106,7 @@
       },
       mac_phase1_complete: {
         title: "Mac: Antigravity セットアップ完了",
-        description: "ここまでで第1フェーズは達成です。",
+        description: "",
         celebrate: true,
         choices: [
           { label: "次の工程（Claude Code準備）へ進む", next: "mac_check_brew", summary: "第2フェーズへ進行" }
@@ -1684,9 +1715,26 @@
       top.appendChild(copy);
       card.appendChild(top);
 
+      const body = document.createElement("div");
+      body.className = "ps-body";
       const pre = document.createElement("pre");
       pre.textContent = command;
-      card.appendChild(pre);
+      body.appendChild(pre);
+      card.appendChild(body);
+
+      const lines = command.split("\n").filter(l => l.trim() !== "").length;
+      if (lines > 2) {
+        body.classList.add("ps-collapsed");
+        const toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className = "ps-toggle-btn";
+        toggle.textContent = "▼ すべて表示";
+        toggle.addEventListener("click", () => {
+          const collapsed = body.classList.toggle("ps-collapsed");
+          toggle.textContent = collapsed ? "▼ すべて表示" : "▲ 閉じる";
+        });
+        card.appendChild(toggle);
+      }
 
       return card;
     }
