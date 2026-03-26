@@ -391,7 +391,6 @@
 
     .substep-row.current {
       opacity: 1;
-      transform: scale(1.01);
     }
 
     .substep-row.done {
@@ -508,8 +507,8 @@
     }
 
     .copy-btn video {
-      width: 198px;
-      height: 198px;
+      width: 80px;
+      height: 80px;
       object-fit: contain;
       display: block;
     }
@@ -1584,7 +1583,7 @@
     function normalizeSubstepText(text) {
       if (!text) return "";
       let value = text;
-      value = value.replace(/下のコマンドをコピーして\s*(PowerShell|Powershell|Terminal)\s*に貼り付ける/gi, "下のコマンドをコピー");
+      value = value.replace(/(?:下の)?コマンドをコピーして\s*(?:PowerShell|Powershell|Terminal)\s*に貼り付ける/gi, "下のコマンドをコピー");
       if (/^Enter を押す$/.test(value.trim())) {
         value = "貼り付けてEnterを押す";
       }
