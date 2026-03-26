@@ -124,27 +124,7 @@
     }
 
     .phase-row {
-      display: grid;
-      grid-template-columns: 26px 1fr;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .phase-dot {
-      width: 22px;
-      height: 22px;
-      border-radius: 999px;
-      border: 1px solid #b8c6d3;
-      background: #e8edf2;
-      display: grid;
-      place-items: center;
-      overflow: hidden;
-    }
-
-    .phase-dot img {
-      width: 16px;
-      height: 16px;
-      opacity: 0.9;
+      display: block;
     }
 
     .phase-bar {
@@ -235,6 +215,15 @@
       font-weight: 700;
     }
 
+    .history-badge {
+      width: 10px;
+      height: 10px;
+      display: inline-block;
+      margin-right: 6px;
+      vertical-align: middle;
+      opacity: 0.9;
+    }
+
     .node.history-node .done-summary {
       font-size: 0.58rem;
       color: #718291;
@@ -308,7 +297,7 @@
       display: flex;
       align-items: flex-start;
       gap: 8px;
-      padding: 4px 2px;
+      padding: 8px 2px;
       transition: opacity 150ms ease, transform 150ms ease;
       opacity: 0.42;
     }
@@ -319,7 +308,7 @@
     }
 
     .substep-row.done {
-      opacity: 0.42;
+      opacity: 1;
     }
 
     .substep-text {
@@ -330,8 +319,9 @@
       border: 1px solid #ced8e2;
       border-radius: 8px;
       background: #f4f7fa;
-      padding: 5px 8px;
+      padding: 10px 12px;
       flex: 1;
+      line-height: 1.6;
     }
 
     .substep-row.current .substep-text {
@@ -343,9 +333,11 @@
     }
 
     .substep-row.done .substep-text {
-      color: #5d6b79;
-      font-size: 0.8rem;
-      opacity: 0.78;
+      color: #1f4c3f;
+      font-size: 0.9rem;
+      opacity: 1;
+      border-color: #a7cfb9;
+      background: #eaf8ef;
     }
 
     .ps-card {
@@ -473,6 +465,25 @@
       display: none;
     }
 
+    .loading-card {
+      border: 1px solid #c8d5df;
+      border-radius: 14px;
+      background: #f4f8fb;
+      min-height: 220px;
+      display: grid;
+      place-items: center;
+      margin: 0 0 16px;
+      animation: fadeIn 180ms ease;
+    }
+
+    .loading-card video {
+      width: 140px;
+      height: 140px;
+      object-fit: contain;
+      display: block;
+      opacity: 0.95;
+    }
+
     .celebrate {
       margin-top: 10px;
       position: relative;
@@ -491,6 +502,15 @@
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(5px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes textIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .active-node > * {
+      animation: textIn 260ms ease both;
     }
 
     @keyframes burst {
@@ -1063,7 +1083,9 @@
       currentNodeId: null,
       history: [],
       flow: null,
-      celebratedNodes: {}
+      celebratedNodes: {},
+      isLoading: false,
+      pendingNext: null
     };
 
     const startBtn = document.getElementById("startBtn");
@@ -1089,6 +1111,8 @@
       state.history = [];
       state.flow = null;
       state.celebratedNodes = {};
+      state.isLoading = false;
+      state.pendingNext = null;
       tree.innerHTML = "";
       tree.style.display = "none";
       finish.style.display = "none";
@@ -1105,6 +1129,14 @@
 
       for (const entry of state.history) {
         tree.appendChild(renderHistoryNode(entry));
+      }
+
+      if (state.isLoading) {
+        const loading = document.createElement("section");
+        loading.className = "loading-card";
+        loading.innerHTML = `<video src="./assets/loading.webm" autoplay muted loop playsinline></video>`;
+        tree.appendChild(loading);
+        return;
       }
 
       const current = nodes[state.currentNodeId];
@@ -1126,7 +1158,7 @@
 
       wrap.innerHTML = `
         <div class="node-head">
-          <h3>${escapeHtml(nodes[entry.nodeId].title)}</h3>
+          <h3><img class="history-badge" src="./assets/yes.png" alt="done">${escapeHtml(nodes[entry.nodeId].title)}</h3>
         </div>
       `;
       return wrap;
@@ -1184,8 +1216,15 @@
               nodeId,
               summary: choice.summary || `${choice.label} を選択`
             });
-            state.currentNodeId = choice.next;
+            state.pendingNext = choice.next;
+            state.isLoading = true;
             render();
+            setTimeout(() => {
+              state.currentNodeId = state.pendingNext;
+              state.pendingNext = null;
+              state.isLoading = false;
+              render();
+            }, 1500);
           });
           choices.appendChild(b);
         });
@@ -1216,24 +1255,16 @@
       const p1Rate = Math.max(0, Math.min(100, (p1Done / phase1Nodes.length) * 100));
       const p2Rate = Math.max(0, Math.min(100, (p2Done / phase2Nodes.length) * 100));
       const showPhase2 = forceComplete || (doneSet.has(phase1CompleteId) && state.currentNodeId !== phase1CompleteId);
+      const activeRate = showPhase2 ? p2Rate : p1Rate;
+      const goalText = showPhase2 ? "ゴール: Claude Codeをインストールしたら達成" : "ゴール: Antigravityをインストールしたら達成";
 
       status.innerHTML = `
         <div class="phase-bars">
-          <div class="phase-goal">ゴール: Antigravityをインストールしたら達成</div>
+          <div class="phase-goal">${goalText}</div>
           <div class="phase-row">
-            <div class="phase-dot"><img src="${p1Rate >= 100 ? "./assets/yes.png" : "./assets/no.png"}" alt="phase1"></div>
             <div class="phase-bar">
-              <div class="phase-fill" style="width:${p1Rate}%;"></div>
-              <div class="walker" style="left:${Math.max(3, p1Rate)}%;">
-                <video src="./assets/walker.webm" autoplay muted loop playsinline></video>
-              </div>
-            </div>
-          </div>
-          <div class="phase-row" style="${showPhase2 ? "" : "display:none;"}">
-            <div class="phase-dot"><img src="${p2Rate >= 100 ? "./assets/yes.png" : "./assets/no.png"}" alt="phase2"></div>
-            <div class="phase-bar">
-              <div class="phase-fill" style="width:${p2Rate}%;"></div>
-              <div class="walker" style="left:${Math.max(3, p2Rate)}%;">
+              <div class="phase-fill" style="width:${activeRate}%;"></div>
+              <div class="walker" style="left:${Math.max(3, activeRate)}%;">
                 <video src="./assets/walker.webm" autoplay muted loop playsinline></video>
               </div>
             </div>
