@@ -383,10 +383,7 @@
     }
 
     .substep-row {
-      display: grid;
-      grid-template-columns: 28px minmax(0, 1fr);
-      align-items: start;
-      column-gap: 10px;
+      display: block;
       padding: 0 2px;
       transition: opacity 150ms ease, transform 150ms ease;
       opacity: 0.42;
@@ -409,18 +406,23 @@
       border: 1px solid #ced8e2;
       border-radius: 8px;
       background: #f4f7fa;
-      padding: 10px 12px;
+      padding: 10px 12px 10px 44px;
       flex: 1;
       line-height: 1.72;
+      position: relative;
     }
 
     .substep-dot {
-      width: 28px;
-      height: 28px;
+      width: 20px;
+      height: 20px;
       object-fit: contain;
-      margin-top: 2px;
+      margin-top: 0;
       opacity: 0.94;
-      flex: 0 0 auto;
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
     }
 
     .example-chip {
@@ -508,8 +510,8 @@
     }
 
     .copy-btn video {
-      width: 22px;
-      height: 22px;
+      width: 66px;
+      height: 66px;
       object-fit: contain;
       display: block;
     }
@@ -1532,8 +1534,8 @@
           }
         }
 
-        row.appendChild(dot);
         row.appendChild(text);
+        text.appendChild(dot);
         wrap.appendChild(row);
       });
 
