@@ -506,11 +506,13 @@
       gap: 6px;
     }
 
-    .copy-btn video {
-      width: 80px;
-      height: 80px;
-      object-fit: contain;
-      display: block;
+    @keyframes copy-pulse {
+      0%, 100% { color: var(--card-ink); }
+      50% { color: #4ecb88; }
+    }
+
+    .copy-label {
+      animation: copy-pulse 2.4s ease-in-out infinite;
     }
 
     .copy-tip {
@@ -1663,16 +1665,19 @@
       const copy = document.createElement("button");
       copy.type = "button";
       copy.className = "copy-btn";
-      copy.innerHTML = `<video src="./assets/next_arrow.webm" autoplay muted loop playsinline></video><span>コピー</span>`;
+      copy.innerHTML = `<span class="copy-label">コピー</span>`;
       copy.addEventListener("click", async () => {
+        const label = copy.querySelector(".copy-label");
         try {
           await navigator.clipboard.writeText(command);
-          copy.innerHTML = `<video src="./assets/next_arrow.webm" autoplay muted loop playsinline></video><span>コピーしました</span>`;
+          label.style.animation = "none";
+          label.textContent = "コピーしました";
           maybeShowPasteWarning(shellMeta, copy);
-          setTimeout(() => { copy.innerHTML = `<video src="./assets/next_arrow.webm" autoplay muted loop playsinline></video><span>コピー</span>`; }, 1500);
+          setTimeout(() => { label.textContent = "コピー"; label.style.animation = ""; }, 1500);
         } catch (_e) {
-          copy.innerHTML = `<video src="./assets/next_arrow.webm" autoplay muted loop playsinline></video><span>コピー失敗</span>`;
-          setTimeout(() => { copy.innerHTML = `<video src="./assets/next_arrow.webm" autoplay muted loop playsinline></video><span>コピー</span>`; }, 1500);
+          label.style.animation = "none";
+          label.textContent = "コピー失敗";
+          setTimeout(() => { label.textContent = "コピー"; label.style.animation = ""; }, 1500);
         }
       });
 
