@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Claude Code セットアップナビ</title>
-  <script type="module" src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
   <style>
     :root {
       --bg: #eceff1;
@@ -46,6 +46,8 @@
       padding: 24px;
       box-shadow: 0 8px 28px rgba(16, 24, 40, 0.05);
       margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
     }
 
     .title {
@@ -58,9 +60,28 @@
       margin: 0 0 16px;
       color: var(--muted);
       font-size: 0.97rem;
+      max-width: 62%;
     }
 
     .start-wrap { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .hero-media {
+      position: absolute;
+      right: 14px;
+      top: 10px;
+      width: 240px;
+      height: 240px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #d0d8df;
+      background: #edf2f5;
+      box-shadow: 0 8px 24px rgba(16, 24, 40, 0.08);
+    }
+
+    .hero-media video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
 
     button {
       border: 0;
@@ -162,7 +183,7 @@
       place-items: center;
     }
 
-    .walker dotlottie-player {
+    .walker-json {
       width: 34px;
       height: 34px;
     }
@@ -287,15 +308,6 @@
       opacity: 0.92;
     }
 
-    .history-pin {
-      position: absolute;
-      left: -33px;
-      top: 17px;
-      width: 14px;
-      height: 14px;
-      z-index: 3;
-    }
-
     .substeps {
       margin-top: 8px;
       padding: 0;
@@ -304,7 +316,7 @@
     .substep-row {
       display: flex;
       align-items: flex-start;
-      gap: 10px;
+      gap: 8px;
       padding: 4px 2px;
       transition: opacity 150ms ease, transform 150ms ease;
       opacity: 0.42;
@@ -329,7 +341,7 @@
       align-items: center;
       justify-content: center;
       border-radius: 999px;
-      cursor: pointer;
+      pointer-events: none;
     }
 
     .substep-toggle img {
@@ -419,9 +431,9 @@
     }
 
     .copy-tip {
-      position: absolute;
-      top: 36px;
-      right: 8px;
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
       max-width: 290px;
       background: #f6fbf9;
       border: 1px solid #b9d9cb;
@@ -532,6 +544,13 @@
     @media (max-width: 640px) {
       .container { padding: 16px 12px 40px; }
       .hero { padding: 18px; border-radius: 14px; }
+      .lead { max-width: 100%; }
+      .hero-media {
+        position: static;
+        width: 100%;
+        height: 180px;
+        margin-top: 12px;
+      }
       .tree { margin-left: 6px; padding-left: 16px; }
       .node::before { width: 10px; left: -16px; }
     }
@@ -545,6 +564,9 @@
       <div class="start-wrap">
         <button id="startBtn" class="btn-main">まずは始める</button>
         <button id="resetBtn" class="btn-secondary" type="button">最初からやり直す</button>
+      </div>
+      <div class="hero-media">
+        <video src="./assets/bear.webm" autoplay muted loop playsinline></video>
       </div>
     </section>
 
@@ -1059,7 +1081,6 @@
       started: false,
       currentNodeId: null,
       history: [],
-      substepProgress: {},
       flow: null,
       celebratedNodes: {}
     };
@@ -1085,7 +1106,6 @@
       state.started = false;
       state.currentNodeId = null;
       state.history = [];
-      state.substepProgress = {};
       state.flow = null;
       state.celebratedNodes = {};
       tree.innerHTML = "";
@@ -1124,7 +1144,6 @@
       wrap.className = "node history-node";
 
       wrap.innerHTML = `
-        <img class="history-pin" src="./assets/yes.png" alt="done">
         <div class="node-head">
           <img class="history-icon" src="./assets/yes.png" alt="done">
           <h3>${escapeHtml(nodes[entry.nodeId].title)}</h3>
@@ -1174,17 +1193,11 @@
       if (node.choices && node.choices.length) {
         const choices = document.createElement("div");
         choices.className = "choices";
-        const substepsCompleted = isSubstepsCompleted(nodeId, node);
         node.choices.forEach(choice => {
           const b = document.createElement("button");
           b.type = "button";
           b.className = "choice-btn";
           b.textContent = choice.label;
-          if (node.substeps && !substepsCompleted) {
-            b.disabled = true;
-            b.style.opacity = "0.45";
-            b.title = "先にこの工程内のチェックを完了してください";
-          }
           b.addEventListener("click", () => {
             if (choice.flow) state.flow = choice.flow;
             state.history.push({
@@ -1232,7 +1245,7 @@
             <div class="phase-bar">
               <div class="phase-fill" style="width:${p1Rate}%;"></div>
               <div class="walker" style="left:${Math.max(3, p1Rate)}%;">
-                <dotlottie-player src="./assets/Boy Walking.lottie" background="transparent" speed="1" loop autoplay></dotlottie-player>
+                <div class="walker-json" data-walker="p1"></div>
               </div>
             </div>
           </div>
@@ -1241,12 +1254,13 @@
             <div class="phase-bar">
               <div class="phase-fill" style="width:${p2Rate}%;"></div>
               <div class="walker" style="left:${Math.max(3, p2Rate)}%;">
-                <dotlottie-player src="./assets/Boy Walking.lottie" background="transparent" speed="1" loop autoplay></dotlottie-player>
+                <div class="walker-json" data-walker="p2"></div>
               </div>
             </div>
           </div>
         </div>
       `;
+      ensureWalkerAnimations();
     }
 
     function getShellLabel(nodeId, node) {
@@ -1256,42 +1270,10 @@
       return { text: "コマンド", icon: null, kind: "plain" };
     }
 
-    function getSubstepState(nodeId, node) {
-      if (!state.substepProgress[nodeId]) {
-        state.substepProgress[nodeId] = node.substeps.map(() => false);
-      }
-      return state.substepProgress[nodeId];
-    }
-
-    function isSubstepsCompleted(nodeId, node) {
-      if (!node.substeps || node.substeps.length === 0) return true;
-      const progress = getSubstepState(nodeId, node);
-      return progress.every(Boolean);
-    }
-
-    function updateSubstep(nodeId, node, index) {
-      const progress = getSubstepState(nodeId, node).slice();
-      const firstIncomplete = progress.findIndex(done => !done);
-      const isDone = progress[index];
-
-      if (isDone) {
-        for (let i = index; i < progress.length; i += 1) {
-          progress[i] = false;
-        }
-      } else if (index === firstIncomplete) {
-        progress[index] = true;
-      }
-
-      state.substepProgress[nodeId] = progress;
-      render();
-    }
-
     function renderSubsteps(nodeId, node, mode = "all") {
       const wrap = document.createElement("section");
       wrap.className = "substeps";
 
-      const progress = getSubstepState(nodeId, node);
-      const firstIncomplete = progress.findIndex(done => !done);
       let indices = node.substeps.map((_v, idx) => idx);
       if (mode === "pre" && node.preSteps) {
         indices = node.preSteps.map((_, idx) => idx);
@@ -1305,23 +1287,16 @@
         const label = getSubstepLabel(node, idx);
         const row = document.createElement("div");
         row.className = "substep-row";
-
-        const done = progress[idx];
-        const isCurrent = idx === firstIncomplete || (firstIncomplete === -1 && idx === progress.length - 1);
-        if (done) row.classList.add("done");
-        if (isCurrent && !done) row.classList.add("current");
+        if (idx === indices[0]) row.classList.add("current");
+        if (idx !== indices[0]) row.classList.add("done");
 
         const button = document.createElement("button");
         button.type = "button";
         button.className = "substep-toggle";
-        button.setAttribute("aria-label", `${label} をチェック`);
-        const clickable = done || idx === firstIncomplete;
-        button.disabled = !clickable;
-        button.addEventListener("click", () => updateSubstep(nodeId, node, idx));
 
         const icon = document.createElement("img");
-        icon.src = done ? "./assets/yes.png" : "./assets/no.png";
-        icon.alt = done ? "完了" : "未完了";
+        icon.src = idx === indices[0] ? "./assets/no.png" : "./assets/yes.png";
+        icon.alt = idx === indices[0] ? "未完了" : "完了";
         button.appendChild(icon);
 
         const text = document.createElement("span");
@@ -1385,7 +1360,7 @@
         try {
           await navigator.clipboard.writeText(command);
           copy.textContent = "コピーしました";
-          maybeShowPasteWarning(top, shellMeta);
+          maybeShowPasteWarning(shellMeta);
           setTimeout(() => { copy.textContent = "コピー"; }, 1500);
         } catch (_e) {
           copy.textContent = "コピー失敗";
@@ -1403,12 +1378,12 @@
       return card;
     }
 
-    function maybeShowPasteWarning(host, shellMeta) {
+    function maybeShowPasteWarning(shellMeta) {
       const hide = localStorage.getItem("hidePasteWarning") === "1";
       const isPasteFlow = shellMeta.kind === "powershell" || shellMeta.kind === "terminal";
       if (hide || !isPasteFlow) return;
 
-      const old = host.querySelector(".copy-tip");
+      const old = document.querySelector(".copy-tip");
       if (old) old.remove();
 
       const tip = document.createElement("div");
@@ -1426,7 +1401,7 @@
         tip.remove();
       });
       tip.appendChild(hideBtn);
-      host.appendChild(tip);
+      document.body.appendChild(tip);
       setTimeout(() => tip.remove(), 5000);
     }
 
@@ -1445,6 +1420,21 @@
       }
       document.body.appendChild(layer);
       setTimeout(() => layer.remove(), 1300);
+    }
+
+    function ensureWalkerAnimations() {
+      if (!window.lottie) return;
+      document.querySelectorAll(".walker-json").forEach((el) => {
+        if (el.dataset.init === "1") return;
+        el.dataset.init = "1";
+        window.lottie.loadAnimation({
+          container: el,
+          renderer: "svg",
+          loop: true,
+          autoplay: true,
+          path: "./assets/walker.json"
+        });
+      });
     }
 
     function escapeHtml(text) {
