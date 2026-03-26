@@ -402,12 +402,21 @@
       color: #687888;
       font-weight: 600;
       transition: color 140ms ease, font-size 140ms ease, transform 140ms ease, opacity 140ms ease;
-      border: 1px solid #ced8e2;
-      border-radius: 8px;
-      background: #f4f7fa;
-      padding: 10px 12px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      padding: 4px 0;
       flex: 1;
       line-height: 1.72;
+    }
+
+    .substep-dot {
+      width: 14px;
+      height: 14px;
+      object-fit: contain;
+      margin-top: 5px;
+      opacity: 0.94;
+      flex: 0 0 auto;
     }
 
     .example-chip {
@@ -429,8 +438,6 @@
       color: #13352d;
       font-weight: 800;
       font-size: 1rem;
-      border-color: #a7cfb9;
-      background: #eaf8ef;
     }
 
     .substep-row.done .substep-text {
@@ -438,8 +445,6 @@
       font-size: 0.94rem;
       font-weight: 700;
       opacity: 1;
-      border-color: #a7cfb9;
-      background: #eaf8ef;
     }
 
     .ps-card {
@@ -489,12 +494,22 @@
       padding: 6px 9px;
       border-radius: 9px;
       font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .copy-btn video {
+      width: 14px;
+      height: 14px;
+      object-fit: contain;
+      display: block;
     }
 
     .copy-tip {
       position: fixed;
-      bottom: 16px;
-      right: 16px;
+      top: 16px;
+      left: 16px;
       max-width: 290px;
       background: #f6fbf9;
       border: 1px solid #b9d9cb;
@@ -519,6 +534,26 @@
     .copy-tip-head img {
       width: 13px;
       height: 13px;
+    }
+
+    .inline-shell {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      vertical-align: middle;
+      margin: 0 2px;
+    }
+
+    .inline-shell img {
+      width: 14px;
+      height: 14px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .inline-shell .shell-blue {
+      color: #5caeff;
+      font-weight: 800;
     }
 
     .copy-tip-hide {
@@ -794,20 +829,20 @@
       win_prepare_path: {
         title: "Windows: PATH 用フォルダを準備する",
         description: "PATH準備スクリプトを実行します。",
-        command: "mkdir $env:USERPROFILE\\.local\\bin -Force\n\n$currentPath = [Environment]::GetEnvironmentVariable('PATH', 'User')\nif ($currentPath -notlike \"*$env:USERPROFILE\\.local\\bin*\") {\n  [Environment]::SetEnvironmentVariable(\n    'PATH',\n    \"$currentPath;$env:USERPROFILE\\.local\\bin\",\n    'User'\n  )\n}",
+        command: "mkdir $env:USERPROFILE\\.local\\bin -Force\n\n$currentPath = [Environment]::GetEnvironmentVariable('PATH', 'User')\nif ($currentPath -notlike \"*$env:USERPROFILE\\.local\\bin*\") {\n  [Environment]::SetEnvironmentVariable(\n    'PATH',\n    \"$currentPath;$env:USERPROFILE\\.local\\bin\",\n    'User'\n  )\n}\n\nGet-ChildItem \"$env:USERPROFILE\\.local\"",
         preSteps: [
           "下のコマンドをコピーして PowerShell に貼り付ける"
         ],
         postSteps: [
           "Enter を押す",
-          "$env:PATH -split ';' で .local\\bin が含まれるか確認する"
+          "bin が表示されることを確認する"
         ],
         substeps: [
           "下のコマンドをコピーして PowerShell に貼り付ける",
           "Enter を押す",
-          "$env:PATH -split ';' で .local\\bin が含まれるか確認する"
+          "bin が表示されることを確認する"
         ],
-        expectedOutput: "C:\\Users\\<あなたのユーザー名>\\.local\\bin",
+        expectedOutput: "d----- ... bin",
         choices: [
           { label: "実行した", next: "win_restart_shell", summary: "PATH 設定を実行" },
           { label: "すでに設定済み", next: "win_restart_shell", summary: "PATH 設定をスキップ" }
@@ -1299,7 +1334,8 @@
 
       if (!node.substeps || node.substeps.length === 0) {
         const p = document.createElement("p");
-        p.textContent = node.description;
+        p.className = "node-desc-text";
+        p.innerHTML = formatInstructionText(node.description);
         wrap.appendChild(p);
       }
 
@@ -1417,7 +1453,7 @@
     function getShellLabel(nodeId, node) {
       if (node.shellLabel) return { text: node.shellLabel, icon: null, kind: "plain" };
       if (nodeId.startsWith("mac_")) return { text: "Terminal", icon: "./assets/Terminal.png", kind: "terminal" };
-      if (nodeId.startsWith("win_")) return { text: "Powershell", icon: "./assets/Powershell.png", kind: "powershell" };
+      if (nodeId.startsWith("win_")) return { text: "PowerShell", icon: "./assets/Powershell.png", kind: "powershell" };
       return { text: "コマンド", icon: null, kind: "plain" };
     }
 
@@ -1462,15 +1498,23 @@
         if (idx === indices[0]) row.classList.add("current");
         if (idx !== indices[0]) row.classList.add("done");
 
+        const dot = document.createElement("video");
+        dot.className = "substep-dot";
+        dot.src = "./assets/dot_loader.webm";
+        dot.autoplay = true;
+        dot.loop = true;
+        dot.muted = true;
+        dot.playsInline = true;
+
         const text = document.createElement("span");
         text.className = "substep-text";
         const main = document.createElement("span");
         main.className = "substep-main";
         if (typeof label === "string") {
-          main.textContent = label;
+          main.textContent = normalizeSubstepText(label);
           text.appendChild(main);
         } else {
-          main.textContent = label.text;
+          main.textContent = normalizeSubstepText(label.text);
           text.appendChild(main);
           if (label.example) {
             const chip = document.createElement("span");
@@ -1480,6 +1524,7 @@
           }
         }
 
+        row.appendChild(dot);
         row.appendChild(text);
         wrap.appendChild(row);
       });
@@ -1491,6 +1536,16 @@
       const base = node.substeps[idx];
       if (!node.expectedOutput || idx !== node.substeps.length - 1) return base;
       return { text: base, example: node.expectedOutput };
+    }
+
+    function normalizeSubstepText(text) {
+      if (!text) return "";
+      let value = text;
+      value = value.replace(/下のコマンドをコピーして\s*(PowerShell|Powershell|Terminal)\s*に貼り付ける/gi, "下のコマンドをコピー");
+      if (/^Enter を押す$/.test(value.trim())) {
+        value = "貼り付けてEnterを押す";
+      }
+      return value;
     }
 
     function createCelebrateBand() {
@@ -1523,7 +1578,7 @@
       if (!root) return;
       if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-      const targets = Array.from(root.querySelectorAll(".node-head h3, p, .substep-main"));
+      const targets = Array.from(root.querySelectorAll(".node-head h3, .node-desc-text, .substep-main"));
       if (!targets.length) return;
 
       let startDelay = 60;
@@ -1566,16 +1621,16 @@
       const copy = document.createElement("button");
       copy.type = "button";
       copy.className = "copy-btn";
-      copy.textContent = "コピー";
+      copy.innerHTML = `<video src="./assets/next_arrow.webm" autoplay muted loop playsinline></video><span>コピー</span>`;
       copy.addEventListener("click", async () => {
         try {
           await navigator.clipboard.writeText(command);
-          copy.textContent = "コピーしました";
-          maybeShowPasteWarning(shellMeta);
-          setTimeout(() => { copy.textContent = "コピー"; }, 1500);
+          copy.innerHTML = `<video src="./assets/next_arrow.webm" autoplay muted loop playsinline></video><span>コピーしました</span>`;
+          maybeShowPasteWarning(shellMeta, copy);
+          setTimeout(() => { copy.innerHTML = `<video src="./assets/next_arrow.webm" autoplay muted loop playsinline></video><span>コピー</span>`; }, 1500);
         } catch (_e) {
-          copy.textContent = "コピー失敗";
-          setTimeout(() => { copy.textContent = "コピー"; }, 1500);
+          copy.innerHTML = `<video src="./assets/next_arrow.webm" autoplay muted loop playsinline></video><span>コピー失敗</span>`;
+          setTimeout(() => { copy.innerHTML = `<video src="./assets/next_arrow.webm" autoplay muted loop playsinline></video><span>コピー</span>`; }, 1500);
         }
       });
 
@@ -1589,7 +1644,7 @@
       return card;
     }
 
-    function maybeShowPasteWarning(shellMeta) {
+    function maybeShowPasteWarning(shellMeta, anchorEl) {
       const hide = localStorage.getItem("hidePasteWarning") === "1";
       const isPasteFlow = shellMeta.kind === "powershell" || shellMeta.kind === "terminal";
       if (hide || !isPasteFlow) return;
@@ -1613,7 +1668,20 @@
       });
       tip.appendChild(hideBtn);
       document.body.appendChild(tip);
+      if (anchorEl) {
+        const rect = anchorEl.getBoundingClientRect();
+        tip.style.top = `${Math.max(12, rect.bottom + 8)}px`;
+        tip.style.left = `${Math.max(12, rect.right - 280)}px`;
+      }
       setTimeout(() => tip.remove(), 5000);
+    }
+
+    function formatInstructionText(text) {
+      if (!text) return "";
+      let html = escapeHtml(text);
+      html = html.replace(/powershell/gi, '<span class="inline-shell"><img src="./assets/Powershell.png" alt="PowerShell"><span class="shell-blue">PowerShell</span></span>');
+      html = html.replace(/terminal/gi, '<span class="inline-shell"><img src="./assets/Terminal.png" alt="Terminal"><span class="shell-blue">Terminal</span></span>');
+      return html;
     }
 
     function triggerScreenBurst() {
