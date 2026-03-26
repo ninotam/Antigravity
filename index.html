@@ -216,8 +216,8 @@
     }
 
     .history-badge {
-      width: 10px;
-      height: 10px;
+      width: 12px;
+      height: 12px;
       display: inline-block;
       margin-right: 6px;
       vertical-align: middle;
@@ -289,15 +289,17 @@
     }
 
     .substeps {
-      margin-top: 8px;
+      margin-top: 10px;
       padding: 0;
+      display: grid;
+      gap: 10px;
     }
 
     .substep-row {
       display: flex;
       align-items: flex-start;
       gap: 8px;
-      padding: 8px 2px;
+      padding: 0 2px;
       transition: opacity 150ms ease, transform 150ms ease;
       opacity: 0.42;
     }
@@ -321,7 +323,7 @@
       background: #f4f7fa;
       padding: 10px 12px;
       flex: 1;
-      line-height: 1.6;
+      line-height: 1.72;
     }
 
     .substep-row.current .substep-text {
@@ -334,7 +336,8 @@
 
     .substep-row.done .substep-text {
       color: #1f4c3f;
-      font-size: 0.9rem;
+      font-size: 0.94rem;
+      font-weight: 700;
       opacity: 1;
       border-color: #a7cfb9;
       background: #eaf8ef;
@@ -510,7 +513,18 @@
     }
 
     .active-node > * {
-      animation: textIn 260ms ease both;
+      opacity: 0;
+      animation: textIn 320ms ease forwards;
+    }
+
+    .active-node > *:nth-child(1) { animation-delay: 40ms; }
+    .active-node > *:nth-child(2) { animation-delay: 110ms; }
+    .active-node > *:nth-child(3) { animation-delay: 180ms; }
+    .active-node > *:nth-child(4) { animation-delay: 250ms; }
+    .active-node > *:nth-child(5) { animation-delay: 320ms; }
+    .active-node > *:nth-child(6) { animation-delay: 390ms; }
+    .active-node > *:nth-child(7) { animation-delay: 460ms; }
+    .active-node > *:nth-child(8) { animation-delay: 530ms; }
     }
 
     @keyframes burst {
@@ -1085,7 +1099,8 @@
       flow: null,
       celebratedNodes: {},
       isLoading: false,
-      pendingNext: null
+      pendingNext: null,
+      typeTimers: []
     };
 
     const startBtn = document.getElementById("startBtn");
@@ -1106,6 +1121,7 @@
     resetBtn.addEventListener("click", resetAll);
 
     function resetAll() {
+      clearTypeTimers();
       state.started = false;
       state.currentNodeId = null;
       state.history = [];
@@ -1113,6 +1129,7 @@
       state.celebratedNodes = {};
       state.isLoading = false;
       state.pendingNext = null;
+      state.typeTimers = [];
       tree.innerHTML = "";
       tree.style.display = "none";
       finish.style.display = "none";
@@ -1121,6 +1138,7 @@
     }
 
     function render() {
+      clearTypeTimers();
       tree.innerHTML = "";
 
       if (!state.started || !state.currentNodeId) return;
@@ -1224,7 +1242,7 @@
               state.pendingNext = null;
               state.isLoading = false;
               render();
-            }, 1500);
+            }, 750);
           });
           choices.appendChild(b);
         });
@@ -1235,6 +1253,8 @@
         done.textContent = "このノードは分岐なし";
         wrap.appendChild(done);
       }
+
+      runTypewriter(wrap);
 
       return wrap;
     }
@@ -1330,6 +1350,41 @@
         wrap.appendChild(c);
       }
       return wrap;
+    }
+
+    function clearTypeTimers() {
+      if (!state.typeTimers.length) return;
+      state.typeTimers.forEach((id) => clearTimeout(id));
+      state.typeTimers = [];
+    }
+
+    function scheduleTypeTimer(fn, delay) {
+      const id = setTimeout(fn, delay);
+      state.typeTimers.push(id);
+    }
+
+    function runTypewriter(root) {
+      if (!root) return;
+      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+      const targets = Array.from(root.querySelectorAll(".node-head h3, p, .substep-text"));
+      if (!targets.length) return;
+
+      let startDelay = 60;
+      targets.forEach((el) => {
+        const fullText = el.textContent || "";
+        if (!fullText.trim()) return;
+        el.textContent = "";
+
+        const charDelay = fullText.length > 55 ? 9 : 13;
+        for (let i = 1; i <= fullText.length; i += 1) {
+          scheduleTypeTimer(() => {
+            el.textContent = fullText.slice(0, i);
+          }, startDelay + (i * charDelay));
+        }
+
+        startDelay += Math.min(240, Math.max(90, fullText.length * 3));
+      });
     }
 
     function createCodeCard(command, shellMeta = { text: "コマンド", icon: null, kind: "plain" }) {
