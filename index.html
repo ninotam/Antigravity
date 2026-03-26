@@ -292,7 +292,7 @@
       margin-top: 10px;
       padding: 0;
       display: grid;
-      gap: 10px;
+      gap: 14px;
     }
 
     .substep-row {
@@ -324,6 +324,21 @@
       padding: 10px 12px;
       flex: 1;
       line-height: 1.72;
+    }
+
+    .example-chip {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 8px;
+      padding: 3px 9px;
+      border-radius: 8px;
+      border: 1px solid #c8d2dc;
+      background: #e6ebf0;
+      color: #2a3b4b;
+      font-size: 0.86rem;
+      font-weight: 700;
+      line-height: 1.2;
+      vertical-align: middle;
     }
 
     .substep-row.current .substep-text {
@@ -1234,7 +1249,18 @@
               nodeId,
               summary: choice.summary || `${choice.label} を選択`
             });
+            const nextNode = nodes[choice.next];
+            const skipLoading = !!(nextNode && nextNode.celebrate);
             state.pendingNext = choice.next;
+
+            if (skipLoading) {
+              state.currentNodeId = state.pendingNext;
+              state.pendingNext = null;
+              state.isLoading = false;
+              render();
+              return;
+            }
+
             state.isLoading = true;
             render();
             setTimeout(() => {
@@ -1270,6 +1296,7 @@
         : ["win_check_git", "win_prepare_path", "win_restart_shell", "win_check_node", "win_check_npm", "win_check_claude", "win_make_workdir", "win_launch_claude", "win_first_message"];
 
       const doneSet = new Set(state.history.map(h => h.nodeId));
+      if (state.currentNodeId) doneSet.add(state.currentNodeId);
       const p1Done = forceComplete ? phase1Nodes.length : phase1Nodes.filter(id => doneSet.has(id)).length;
       const p2Done = forceComplete ? phase2Nodes.length : phase2Nodes.filter(id => doneSet.has(id)).length;
       const p1Rate = Math.max(0, Math.min(100, (p1Done / phase1Nodes.length) * 100));
@@ -1322,7 +1349,21 @@
 
         const text = document.createElement("span");
         text.className = "substep-text";
-        text.textContent = label;
+        const main = document.createElement("span");
+        main.className = "substep-main";
+        if (typeof label === "string") {
+          main.textContent = label;
+          text.appendChild(main);
+        } else {
+          main.textContent = label.text;
+          text.appendChild(main);
+          if (label.example) {
+            const chip = document.createElement("span");
+            chip.className = "example-chip";
+            chip.textContent = `表示例 [${label.example}]`;
+            text.appendChild(chip);
+          }
+        }
 
         row.appendChild(text);
         wrap.appendChild(row);
@@ -1334,7 +1375,7 @@
     function getSubstepLabel(node, idx) {
       const base = node.substeps[idx];
       if (!node.expectedOutput || idx !== node.substeps.length - 1) return base;
-      return `${base} 表示例 [${node.expectedOutput}]`;
+      return { text: base, example: node.expectedOutput };
     }
 
     function createCelebrateBand() {
@@ -1367,7 +1408,7 @@
       if (!root) return;
       if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-      const targets = Array.from(root.querySelectorAll(".node-head h3, p, .substep-text"));
+      const targets = Array.from(root.querySelectorAll(".node-head h3, p, .substep-main"));
       if (!targets.length) return;
 
       let startDelay = 60;
@@ -1383,7 +1424,7 @@
           }, startDelay + (i * charDelay));
         }
 
-        startDelay += Math.min(240, Math.max(90, fullText.length * 3));
+        startDelay += (fullText.length * charDelay) + 130;
       });
     }
 
