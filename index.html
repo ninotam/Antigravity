@@ -263,14 +263,17 @@
       font-size: 0.6rem;
       color: #5f6f7e;
       font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .history-badge {
       width: 12px;
       height: 12px;
       display: inline-block;
-      margin-right: 6px;
-      vertical-align: middle;
+      margin-right: 0;
+      vertical-align: baseline;
       opacity: 0.9;
     }
 
@@ -331,10 +334,10 @@
     }
 
     .choice-btn.choice-positive {
-      background: #e8f6ed;
-      border-color: #8ad3a7;
-      color: #1d4c35;
-      box-shadow: 0 0 0 1px rgba(71, 183, 109, 0.28), 0 0 10px rgba(71, 183, 109, 0.24);
+      background: #e8f2ff;
+      border-color: #86b6ff;
+      color: #163a75;
+      box-shadow: 0 0 0 1px rgba(76, 134, 240, 0.36), 0 0 10px rgba(76, 134, 240, 0.28);
     }
 
     .choice-content {
@@ -380,9 +383,10 @@
     }
 
     .substep-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      align-items: start;
+      column-gap: 10px;
       padding: 0 2px;
       transition: opacity 150ms ease, transform 150ms ease;
       opacity: 0.42;
@@ -402,19 +406,19 @@
       color: #687888;
       font-weight: 600;
       transition: color 140ms ease, font-size 140ms ease, transform 140ms ease, opacity 140ms ease;
-      border: 0;
-      border-radius: 0;
-      background: transparent;
-      padding: 4px 0;
+      border: 1px solid #ced8e2;
+      border-radius: 8px;
+      background: #f4f7fa;
+      padding: 10px 12px;
       flex: 1;
       line-height: 1.72;
     }
 
     .substep-dot {
-      width: 14px;
-      height: 14px;
+      width: 28px;
+      height: 28px;
       object-fit: contain;
-      margin-top: 5px;
+      margin-top: 2px;
       opacity: 0.94;
       flex: 0 0 auto;
     }
@@ -438,6 +442,8 @@
       color: #13352d;
       font-weight: 800;
       font-size: 1rem;
+      border-color: #a7cfb9;
+      background: #eaf8ef;
     }
 
     .substep-row.done .substep-text {
@@ -445,6 +451,8 @@
       font-size: 0.94rem;
       font-weight: 700;
       opacity: 1;
+      border-color: #a7cfb9;
+      background: #eaf8ef;
     }
 
     .ps-card {
@@ -500,8 +508,8 @@
     }
 
     .copy-btn video {
-      width: 14px;
-      height: 14px;
+      width: 22px;
+      height: 22px;
       object-fit: contain;
       display: block;
     }
@@ -633,7 +641,7 @@
       height: 14px;
       border-radius: 2px;
       opacity: 0;
-      animation: burst 2000ms ease forwards;
+      animation: burst 1500ms ease forwards;
     }
 
     @keyframes fadeIn {
@@ -679,8 +687,8 @@
       content: "";
       position: absolute;
       inset: 0;
-      background: rgba(14, 22, 30, 0.25);
-      animation: burst-dim 2000ms ease forwards;
+      background: rgba(14, 22, 30, 0.28);
+      animation: burst-dim 1500ms ease forwards;
     }
 
     @keyframes burst-dim {
@@ -1698,7 +1706,7 @@
         layer.appendChild(c);
       }
       document.body.appendChild(layer);
-      setTimeout(() => layer.remove(), 2000);
+      setTimeout(() => layer.remove(), 1500);
     }
 
     function escapeHtml(text) {
