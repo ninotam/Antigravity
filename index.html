@@ -4,7 +4,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Claude Code セットアップナビ</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
   <style>
     :root {
       --bg: #eceff1;
@@ -66,15 +65,12 @@
     .start-wrap { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
     .hero-media {
       position: absolute;
-      right: 14px;
-      top: 10px;
-      width: 240px;
-      height: 240px;
-      border-radius: 16px;
+      right: 4px;
+      top: -8px;
+      width: 290px;
+      height: 290px;
       overflow: hidden;
-      border: 1px solid #d0d8df;
-      background: #edf2f5;
-      box-shadow: 0 8px 24px rgba(16, 24, 40, 0.08);
+      pointer-events: none;
     }
 
     .hero-media video {
@@ -183,9 +179,11 @@
       place-items: center;
     }
 
-    .walker-json {
+    .walker video {
       width: 34px;
       height: 34px;
+      object-fit: contain;
+      display: block;
     }
 
     .tree {
@@ -322,30 +320,6 @@
 
     .substep-row.done {
       opacity: 0.42;
-    }
-
-    .substep-toggle {
-      border: 0;
-      background: transparent;
-      padding: 0;
-      width: 24px;
-      height: 24px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 999px;
-      pointer-events: none;
-    }
-
-    .substep-toggle img {
-      width: 20px;
-      height: 20px;
-      display: block;
-    }
-
-    .substep-toggle[disabled] {
-      cursor: not-allowed;
-      opacity: 0.45;
     }
 
     .substep-text {
@@ -511,7 +485,7 @@
       height: 14px;
       border-radius: 2px;
       opacity: 0;
-      animation: burst 900ms ease forwards;
+      animation: burst 2000ms ease forwards;
     }
 
     @keyframes fadeIn {
@@ -522,7 +496,7 @@
     @keyframes burst {
       0% { transform: translateY(-18px) rotate(0deg); opacity: 0; }
       20% { opacity: 1; }
-      100% { transform: translateY(48px) rotate(180deg); opacity: 0; }
+      100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
     }
 
     .screen-burst {
@@ -533,6 +507,20 @@
       overflow: hidden;
     }
 
+    .screen-burst::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(14, 22, 30, 0.25);
+      animation: burst-dim 2000ms ease forwards;
+    }
+
+    @keyframes burst-dim {
+      0% { opacity: 0; }
+      20% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
 
     @media (max-width: 640px) {
       .container { padding: 16px 12px 40px; }
@@ -541,7 +529,7 @@
       .hero-media {
         position: static;
         width: 100%;
-        height: 180px;
+        height: 220px;
         margin-top: 12px;
       }
       .tree { margin-left: 6px; padding-left: 16px; }
@@ -1237,7 +1225,7 @@
             <div class="phase-bar">
               <div class="phase-fill" style="width:${p1Rate}%;"></div>
               <div class="walker" style="left:${Math.max(3, p1Rate)}%;">
-                <div class="walker-json" data-walker="p1"></div>
+                <video src="./assets/walker.webm" autoplay muted loop playsinline></video>
               </div>
             </div>
           </div>
@@ -1246,13 +1234,12 @@
             <div class="phase-bar">
               <div class="phase-fill" style="width:${p2Rate}%;"></div>
               <div class="walker" style="left:${Math.max(3, p2Rate)}%;">
-                <div class="walker-json" data-walker="p2"></div>
+                <video src="./assets/walker.webm" autoplay muted loop playsinline></video>
               </div>
             </div>
           </div>
         </div>
       `;
-      ensureWalkerAnimations();
     }
 
     function getShellLabel(nodeId, node) {
@@ -1282,20 +1269,10 @@
         if (idx === indices[0]) row.classList.add("current");
         if (idx !== indices[0]) row.classList.add("done");
 
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "substep-toggle";
-
-        const icon = document.createElement("img");
-        icon.src = idx === indices[0] ? "./assets/no.png" : "./assets/yes.png";
-        icon.alt = idx === indices[0] ? "未完了" : "完了";
-        button.appendChild(icon);
-
         const text = document.createElement("span");
         text.className = "substep-text";
         text.textContent = label;
 
-        row.appendChild(button);
         row.appendChild(text);
         wrap.appendChild(row);
       });
@@ -1411,22 +1388,7 @@
         layer.appendChild(c);
       }
       document.body.appendChild(layer);
-      setTimeout(() => layer.remove(), 1300);
-    }
-
-    function ensureWalkerAnimations() {
-      if (!window.lottie) return;
-      document.querySelectorAll(".walker-json").forEach((el) => {
-        if (el.dataset.init === "1") return;
-        el.dataset.init = "1";
-        window.lottie.loadAnimation({
-          container: el,
-          renderer: "svg",
-          loop: true,
-          autoplay: true,
-          path: "./assets/walker.json"
-        });
-      });
+      setTimeout(() => layer.remove(), 2000);
     }
 
     function escapeHtml(text) {
