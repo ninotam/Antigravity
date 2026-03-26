@@ -47,6 +47,7 @@
       margin-bottom: 20px;
       position: relative;
       overflow: hidden;
+      transition: padding 260ms ease, border-radius 260ms ease, box-shadow 260ms ease, margin-bottom 260ms ease;
     }
 
     .title {
@@ -60,9 +61,32 @@
       color: var(--muted);
       font-size: 0.97rem;
       max-width: 62%;
+      transition: opacity 220ms ease, max-height 220ms ease, margin 220ms ease;
+      max-height: 80px;
+      overflow: hidden;
     }
 
     .start-wrap { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .hero-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 0 0 14px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid #c9d6df;
+      background: #f3f7fa;
+      color: #304453;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
     .hero-media {
       position: absolute;
       right: 4px;
@@ -71,6 +95,7 @@
       height: 290px;
       overflow: hidden;
       pointer-events: none;
+      transition: width 260ms ease, height 260ms ease, top 260ms ease, right 260ms ease, opacity 260ms ease;
     }
 
     .hero-media video {
@@ -98,6 +123,31 @@
       background: #e5eaef;
       color: #1e2a35;
       border: 1px solid #c9d2da;
+    }
+
+    .app-started .hero {
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 6px 18px rgba(16, 24, 40, 0.06);
+    }
+
+    .app-started .lead {
+      opacity: 0;
+      max-height: 0;
+      margin: 0;
+    }
+
+    .app-started .hero-badges {
+      display: none;
+    }
+
+    .app-started .hero-media {
+      width: 118px;
+      height: 118px;
+      top: -18px;
+      right: -6px;
+      opacity: 0.88;
     }
 
     .status {
@@ -278,6 +328,40 @@
       border-radius: 10px;
       font-size: 0.9rem;
       font-weight: 700;
+    }
+
+    .choice-btn.choice-positive {
+      background: #e8f6ed;
+      border-color: #8ad3a7;
+      color: #1d4c35;
+      box-shadow: 0 0 0 1px rgba(71, 183, 109, 0.28), 0 0 10px rgba(71, 183, 109, 0.24);
+    }
+
+    .choice-content {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .choice-icon {
+      width: 18px;
+      height: 18px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .os-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .os-title img {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+      display: inline-block;
+      vertical-align: middle;
     }
 
     .done-summary {
@@ -589,8 +673,13 @@
 <body>
   <main class="container">
     <section class="hero">
-      <h1 class="title">Claude Code セットアップナビ</h1>
+      <h1 class="title">Claude Code Setupナビ</h1>
       <p class="lead">最初に見えるのは次の1手だけ。完了チェックで一歩ずつ進めて、「最初の一言」まで到達します。</p>
+      <div class="hero-badges">
+        <span class="hero-badge">分岐ガイド</span>
+        <span class="hero-badge">Windows / Mac 対応</span>
+        <span class="hero-badge">コピーボタン付き手順</span>
+      </div>
       <div class="start-wrap">
         <button id="startBtn" class="btn-main">まずは始める</button>
         <button id="resetBtn" class="btn-secondary" type="button">最初からやり直す</button>
@@ -614,8 +703,8 @@
         title: "使っているOSを選んでください",
         description: "ここで選ぶと、そのOS向けの手順だけ表示します。",
         choices: [
-          { label: "Windowsで進める", next: "win_open_terminal", summary: "Windowsルートを選択", flow: "win" },
-          { label: "Macで進める", next: "mac_open_terminal", summary: "Macルートを選択", flow: "mac" }
+          { label: "Windowsで進める", icon: "windows", next: "win_open_terminal", summary: "Windowsルートを選択", flow: "win" },
+          { label: "Macで進める", icon: "mac", next: "mac_open_terminal", summary: "Macルートを選択", flow: "mac" }
         ]
       },
 
@@ -1128,6 +1217,7 @@
       if (state.started) return;
       state.started = true;
       state.currentNodeId = "select_os";
+      document.body.classList.add("app-started");
       tree.style.display = "block";
       status.style.display = "block";
       render();
@@ -1145,6 +1235,7 @@
       state.isLoading = false;
       state.pendingNext = null;
       state.typeTimers = [];
+      document.body.classList.remove("app-started");
       tree.innerHTML = "";
       tree.style.display = "none";
       finish.style.display = "none";
@@ -1191,7 +1282,7 @@
 
       wrap.innerHTML = `
         <div class="node-head">
-          <h3><img class="history-badge" src="./assets/yes.png" alt="done">${escapeHtml(nodes[entry.nodeId].title)}</h3>
+          <h3><img class="history-badge" src="./assets/yes.png" alt="done">${formatNodeTitle(nodes[entry.nodeId].title)}</h3>
         </div>
       `;
       return wrap;
@@ -1203,7 +1294,7 @@
 
       const heading = document.createElement("div");
       heading.className = "node-head";
-      heading.innerHTML = `<h3>${escapeHtml(node.title)}</h3>`;
+      heading.innerHTML = `<h3>${formatNodeTitle(node.title)}</h3>`;
       wrap.appendChild(heading);
 
       if (!node.substeps || node.substeps.length === 0) {
@@ -1238,11 +1329,14 @@
       if (node.choices && node.choices.length) {
         const choices = document.createElement("div");
         choices.className = "choices";
-        node.choices.forEach(choice => {
+        node.choices.forEach((choice, idx) => {
           const b = document.createElement("button");
           b.type = "button";
           b.className = "choice-btn";
-          b.textContent = choice.label;
+          if (nodeId !== "select_os" && idx === 0) {
+            b.classList.add("choice-positive");
+          }
+          b.innerHTML = getChoiceHtml(choice);
           b.addEventListener("click", () => {
             if (choice.flow) state.flow = choice.flow;
             state.history.push({
@@ -1325,6 +1419,27 @@
       if (nodeId.startsWith("mac_")) return { text: "Terminal", icon: "./assets/Terminal.png", kind: "terminal" };
       if (nodeId.startsWith("win_")) return { text: "Powershell", icon: "./assets/Powershell.png", kind: "powershell" };
       return { text: "コマンド", icon: null, kind: "plain" };
+    }
+
+    function getChoiceHtml(choice) {
+      const label = escapeHtml(choice.label || "");
+      if (!choice.icon) return label;
+      const iconPath = choice.icon === "windows" ? "./assets/windows.png" : "./assets/mac.png";
+      const alt = choice.icon === "windows" ? "Windows" : "Mac";
+      return `<span class="choice-content"><img class="choice-icon" src="${iconPath}" alt="${alt}"><span>${label}</span></span>`;
+    }
+
+    function formatNodeTitle(title) {
+      const raw = title || "";
+      if (raw.startsWith("Windows:")) {
+        const rest = escapeHtml(raw.replace(/^Windows:\s*/, ""));
+        return `<span class="os-title"><img src="./assets/windows.png" alt="Windows"><span>${rest}</span></span>`;
+      }
+      if (raw.startsWith("Mac:")) {
+        const rest = escapeHtml(raw.replace(/^Mac:\s*/, ""));
+        return `<span class="os-title"><img src="./assets/mac.png" alt="Mac"><span>${rest}</span></span>`;
+      }
+      return escapeHtml(raw);
     }
 
     function renderSubsteps(nodeId, node, mode = "all") {
